@@ -1,0 +1,12 @@
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  background: #f5f6f8;
+}
+
+body {
+  margin: 0;
+  color: #1a1a1a;
+  font-family: Segoe UI, Arial, sans-serif;
+}
