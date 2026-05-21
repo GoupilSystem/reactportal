@@ -3,16 +3,14 @@ import {
   FluentProvider,
   webLightTheme,
   Card,
-  Button,
-  Textarea,
   Text,
-  makeStyles,
-  Dropdown,
-  Option 
+  makeStyles
 } from "@fluentui/react-components";
 import { matchContact } from "./api/contactApi";
 import { ContactResultGrid } from "./components/ContactResultGrid";
+import { RequestPanel } from "./components/RequestPanel";
 import { motion, AnimatePresence } from "framer-motion";
+import type { SearchUI } from "./types/SearchUI";
 
 const useStyles = makeStyles({
   page: {
@@ -87,16 +85,34 @@ export default function App() {
     { key: "CONF", text: "CONF" },
   ];
 
-  const [inputJson, setInputJson] = useState(`{
-    "fullName": "Iselin Renée Lægreid",
-    "email": "iselin@laegreid.net",
-    "mobilePhone": "+4792809389",
-    "street": "Harald Hårfagres gate 12 C",
-    "postalCode": "0363"
-  }`);
+  const [socialSecurityNumber, setSocialSecurityNumber] = useState("25059241837");
+  const [fullName, setFullName] = useState("Iselin Renée Lægreid");
+  const [email, setEmail] = useState("iselin@laegreid.net");
+  const [mobilePhone, setMobilePhone] = useState("+4792809389");
+  const [street, setStreet] = useState("Harald Hårfagres gate 12 C");
+  const [postalCode, setPostalCode] = useState("0363");
 
+  const inputJson = JSON.stringify(
+  {
+    socialSecurityNumber,
+    fullName,
+    email,
+    mobilePhone,
+    street,
+    postalCode,
+  },
+  null,
+  2
+);
+
+  const [search, setSearch] = useState<SearchUI>({
+    mode: "lucerne",
+    lucerneFactor: 1,
+  });
+  
   const [configJson, setConfigJson] = useState(`{
     "searchRules": [
+      { "fieldName": "SocialSecurityNumber", "operator": "Equal" },
       { "fieldName": "Email", "operator": "Equal" },
       { "fieldName": "Email", "operator": "BeginsWith", "length": 5 },
       { "fieldName": "MobilePhone", "operator": "Equal" },
@@ -117,33 +133,37 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   async function run() {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const input = JSON.parse(inputJson);
-      const config = JSON.parse(configJson);
+    const input = JSON.parse(inputJson);
+    const config = JSON.parse(configJson);
 
-      const payload = {
-        ...input,
-        environment: env,
-        searchRules: config.searchRules,
-        scoringRules: config.scoringRules
-      };
+    const payload = {
+      ...input,
+      environment: env,
+      search: {
+        mode: search.mode === "lucerne" ? 0 : 1,
+        lucerneFactor: search.lucerneFactor,
+        querySearchRules: config.searchRules,
+      },
+      scoringRules: config.scoringRules,
+    };
+    console.log(payload);
+    const response = await matchContact(payload);
 
-      const response = await matchContact(payload);
+    const newRun = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      inputName: input.fullName ?? input.email ?? "Unknown",
+      result: response,
+    };
 
-      const newRun = {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        inputName: input.fullName ?? input.email ?? "Unknown",
-        result: response,
-      };
-
-      setResults(prev => [newRun, ...prev]);
-    } finally {
-      setLoading(false);
-    }
+    setResults((prev) => [newRun, ...prev]);
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <FluentProvider theme={webLightTheme}
@@ -167,73 +187,30 @@ export default function App() {
         </Text>
       </div>
 
-  {/* STICKY TOP */}
   <div className={styles.stickyHeader}>
+    <RequestPanel
+      socialSecurityNumber={socialSecurityNumber}
+      setSocialSecurityNumber={setSocialSecurityNumber}
+      fullName={fullName}
+      setFullName={setFullName}
+      email={email}
+      setEmail={setEmail}
+      mobilePhone={mobilePhone}
+      setMobilePhone={setMobilePhone}
+      street={street}
+      setStreet={setStreet}
+      postalCode={postalCode}
+      setPostalCode={setPostalCode}
 
-    {/* REQUEST PANEL */}
-    <div className={styles.page} style={{ paddingTop: 0 }}>
-      <Card className={styles.requestCard}>
-        
-        <div className={styles.panelRow}>
+      configJson={configJson}
+      setConfigJson={setConfigJson}
 
-          {/* LEFT */}
-          <div className={styles.jsonPanel}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, height: 50 }}>
-              <Text size={300} weight="semibold" style={{ whiteSpace: "nowrap" }}>
-                Data input vs
-              </Text>
+      search={search}
+      setSearch={setSearch}
 
-              <div style={{ width: 40 }}>
-                <Dropdown
-                  value={env}
-                  selectedOptions={[env]}
-                  onOptionSelect={(_, data) => {
-                    if (data.optionValue) {
-                      setEnv(data.optionValue);
-                    }
-                  }}
-                >
-                  {envOptions.map(e => (
-                    <Option key={e.key} value={e.key}>
-                      {e.text}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </div>
-            </div>
-
-            <Textarea
-              value={inputJson}
-              onChange={(e) => setInputJson(e.target.value)}
-              className={styles.textarea}
-              resize="vertical"
-            />
-          </div>
-
-          {/* RIGHT */}
-          <div className={styles.jsonPanel}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, height: 50 }}>
-              <Text size={300} weight="semibold">
-                Dev config (prefetch + rules)
-              </Text>
-            </div>
-            <Textarea
-              value={configJson}
-              onChange={(e) => setConfigJson(e.target.value)}
-              className={styles.textarea}
-              resize="vertical"
-            />
-          </div>
-
-        </div>
-
-        <Button appearance="primary" onClick={run} disabled={loading}>
-          {loading ? "Running..." : "Run Match"}
-        </Button>
-
-      </Card>
-    </div>
-
+      run={run}
+      loading={loading}
+    />
   </div>
 
   {/* SCROLLING RESULTS */}
