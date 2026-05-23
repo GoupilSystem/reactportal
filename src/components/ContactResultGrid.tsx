@@ -10,11 +10,9 @@ import {
 import { useState } from "react";
 
 export function ContactResultGrid({
-  result,
-  env,
+  result
 }: {
   result: any;
-  env: string;
 }) {
   const [showAll, setShowAll] = useState(false);
 
@@ -117,7 +115,7 @@ const renderField = (value: string, breakdown?: any) => {
         renderHeaderCell: () => "Contact Id",
         renderCell: (item) => (
             <a
-            href={getContactUrl(env, item.contactId)}
+            href={getContactUrl("PROD", item.contactId)}
             target="_blank"
             rel="noreferrer"
             style={{ color: "#0078d4", textDecoration: "underline" }}

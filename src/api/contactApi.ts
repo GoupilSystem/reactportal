@@ -11,7 +11,7 @@ export async function matchContact(payload: any) {
   );
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    throw new Error(`API error: ${res.status}`);  
   }
 
   return await res.json();

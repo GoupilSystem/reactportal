@@ -10,7 +10,7 @@ import { matchContact } from "./api/contactApi";
 import { ContactResultGrid } from "./components/ContactResultGrid";
 import { RequestPanel } from "./components/RequestPanel";
 import { motion, AnimatePresence } from "framer-motion";
-import type { SearchUI } from "./types/SearchUI";
+import type { LucerneSearchRule } from "./types/LucerneSearchRule";
 
 const useStyles = makeStyles({
   page: {
@@ -76,15 +76,6 @@ const useStyles = makeStyles({
 export default function App() {
   const styles = useStyles();
 
-  const [env, setEnv] = useState("PROD");
-
-  const envOptions = [
-    { key: "PROD", text: "PROD" },
-    { key: "TEST", text: "TEST" },
-    { key: "DEVTEST", text: "DEVTEST" },
-    { key: "CONF", text: "CONF" },
-  ];
-
   const [socialSecurityNumber, setSocialSecurityNumber] = useState("25059241837");
   const [fullName, setFullName] = useState("Iselin Renée Lægreid");
   const [email, setEmail] = useState("iselin@laegreid.net");
@@ -105,29 +96,23 @@ export default function App() {
   2
 );
 
-  const [search, setSearch] = useState<SearchUI>({
-    mode: "lucerne",
-    lucerneFactor: 1,
-  });
-  
   const [configJson, setConfigJson] = useState(`{
-    "searchRules": [
-      { "fieldName": "SocialSecurityNumber", "operator": "Equal" },
-      { "fieldName": "Email", "operator": "Equal" },
-      { "fieldName": "Email", "operator": "BeginsWith", "length": 5 },
-      { "fieldName": "MobilePhone", "operator": "Equal" },
-      { "fieldName": "MobilePhone", "operator": "EndsWith", "length": 8 },
-      { "fieldName": "FullName", "operator": "Like", "pattern": "%{value}%" },
-      { "fieldName": "Address", "operator": "Equal" }
-    ],
-
+    "flags": {
+      "ssnSourceOfTruth": false,
+      "createdLast2Hours": false
+    },
     "scoringRules": [
-      { "fieldName": "Email", "weight": 40, "thresholdRange": [50, 90] },
-      { "fieldName": "MobilePhone", "weight": 30, "thresholdRange": [85, 100] },
-      { "fieldName": "FullName", "weight": 15, "thresholdRange": [70, 100] },
-      { "fieldName": "Address", "weight": 15, "thresholdRange": [70, 90] }
+      { "fieldName": "Email", "weight": 40, "thresholdRange": [50, 90] }
     ]
   }`);
+
+  const [lucerneSearchRules, setLucerneSearchRules] = useState<LucerneSearchRule[]>([
+    { fieldName: "emailaddress1", level: 1, top: 15, enabled: true },
+    { fieldName: "mobilephone", level: 1, top: 15, enabled: true },
+    { fieldName: "fullname", level: 1, top: 15, enabled: true },
+    { fieldName: "address1_line1", level: 1, top: 15, enabled: true },
+    { fieldName: "postalcode", level: 1, top: 15, enabled: true }
+  ]);
 
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -140,16 +125,24 @@ export default function App() {
     const config = JSON.parse(configJson);
 
     const payload = {
-      ...input,
-      environment: env,
-      search: {
-        mode: search.mode === "lucerne" ? 0 : 1,
-        lucerneFactor: search.lucerneFactor,
-        querySearchRules: config.searchRules,
+      contactData: {
+        socialSecurityNumber,
+        fullName,
+        email,
+        mobilePhone,
+        street,
+        postalCode,
+      },
+      searchRules: {
+        ssnSourceOfTruth: config.flags?.ssnSourceOfTruth ?? false,
+        createdLast2Hours: config.flags?.createdLast2Hours ?? false,
+        lucerneSearchRules: lucerneSearchRules.filter(r => r.enabled),
       },
       scoringRules: config.scoringRules,
     };
+
     console.log(payload);
+    
     const response = await matchContact(payload);
 
     const newRun = {
@@ -205,8 +198,8 @@ export default function App() {
       configJson={configJson}
       setConfigJson={setConfigJson}
 
-      search={search}
-      setSearch={setSearch}
+      lucerneSearchRules={lucerneSearchRules}
+      setLucerneSearchRules={setLucerneSearchRules}
 
       run={run}
       loading={loading}
@@ -261,7 +254,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <ContactResultGrid result={run.result} env={env} />
+                <ContactResultGrid result={run.result} />
               </Card>
               
             </motion.div>
