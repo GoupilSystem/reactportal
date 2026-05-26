@@ -1,5 +1,5 @@
 import { Input, Text } from "@fluentui/react-components";
-import type { LuceneSearchRule } from "../types/LuceneSearchRule";
+import type { LuceneSearchRule } from "../types/LookupTypes";
 
 type Props = {
   label: string;
@@ -14,13 +14,13 @@ export function LuceneSearchRuleRow({ label, rule, onChange }: Props) {
       {/* ENABLED */}
       <input
         type="checkbox"
-        checked={rule.enabled}
-        onChange={(e) =>
-          onChange({
-            ...rule,
-            enabled: e.target.checked,
-          })
-        }
+        // checked={rule.enabled}
+        // onChange={(e) =>
+        //   onChange({
+        //     ...rule,
+        //     enabled: e.target.checked,
+        //   })
+        // }
       />
 
       {/* LABEL */}

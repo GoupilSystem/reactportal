@@ -1,12 +1,12 @@
-export type LookupRule = {
-  fieldName: string;
-  enabled: boolean;
+// export type LookupRule = {
+//   fieldName: string;
+//   enabled: boolean;
 
-  // search
-  fuzzySearchLevel: number;
-  fuzzySearchTop: number;
+//   // search
+//   fuzzySearchLevel: number;
+//   fuzzySearchTop: number;
 
-  // scoring
-  scoreWeight: number;
-  scoreThresholdRange: [number, number];
-};
+//   // scoring
+//   scoreWeight: number;
+//   scoreThresholdRange: [number, number];
+// };

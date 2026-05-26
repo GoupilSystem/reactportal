@@ -1,6 +1,6 @@
-export type LuceneSearchRule = {
-  fieldName: string;
-  level: number;
-  top: number;
-  enabled: boolean;
-};
+// export type LuceneSearchRule = {
+//   fieldName: string;
+//   level: number;
+//   top: number;
+//   enabled: boolean;
+// };

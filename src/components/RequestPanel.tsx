@@ -1,28 +1,16 @@
 import { Card, Button } from "@fluentui/react-components";
 
 import { ContactDataPanel } from "./ContactDataPanel";
-import { LookupConfigPanel } from "./LookupConfigPanel";
+import { LookupPlanPanel } from "./LookupPlanPanel";
 
-import type { LookupConfig } from "../types/LookupConfig";
+import type { ContactData, LookupPlan } from "../types/LookupTypes";
 
 type Props = {
-  // Contact
-  socialSecurityNumber: string;
-  setSocialSecurityNumber: (v: string) => void;
-  fullName: string;
-  setFullName: (v: string) => void;
-  email: string;
-  setEmail: (v: string) => void;
-  mobilePhone: string;
-  setMobilePhone: (v: string) => void;
-  street: string;
-  setStreet: (v: string) => void;
-  postalCode: string;
-  setPostalCode: (v: string) => void;
+  contactData: ContactData;
+  setContactData: React.Dispatch<React.SetStateAction<ContactData>>;
 
-  // NEW SINGLE SOURCE OF TRUTH
-  lookupConfig: LookupConfig;
-  setLookupConfig: React.Dispatch<React.SetStateAction<LookupConfig>>;
+  lookupPlan: LookupPlan;
+  setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
 
   run: () => void;
   loading: boolean;
@@ -32,30 +20,20 @@ export function RequestPanel(props: Props) {
   return (
     <Card style={{ padding: 14 }}>
 
-      <div style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+      <div style={{ display: "flex", gap: 30, alignItems: "stretch" }}>
 
-        {/* LEFT */}
-        <div style={{ flex: "0 0 450px" }}>
+        {/* LEFT - CONTACT */}
+        <div style={{ flex: "0 0 350px" }}>
           <ContactDataPanel
-            socialSecurityNumber={props.socialSecurityNumber}
-            setSocialSecurityNumber={props.setSocialSecurityNumber}
-            fullName={props.fullName}
-            setFullName={props.setFullName}
-            email={props.email}
-            setEmail={props.setEmail}
-            mobilePhone={props.mobilePhone}
-            setMobilePhone={props.setMobilePhone}
-            street={props.street}
-            setStreet={props.setStreet}
-            postalCode={props.postalCode}
-            setPostalCode={props.setPostalCode}
+            contactData={props.contactData}
+            setContactData={props.setContactData}
           />
         </div>
 
-        {/* RIGHT */}
-        <LookupConfigPanel
-          lookupConfig={props.lookupConfig}
-          setLookupConfig={props.setLookupConfig}
+        {/* RIGHT - LOOKUP PLAN */}
+        <LookupPlanPanel
+          lookupPlan={props.lookupPlan}
+          setLookupPlan={props.setLookupPlan}
         />
 
       </div>
@@ -66,6 +44,7 @@ export function RequestPanel(props: Props) {
           {props.loading ? "Running..." : "Run Match"}
         </Button>
       </div>
+
     </Card>
   );
 }

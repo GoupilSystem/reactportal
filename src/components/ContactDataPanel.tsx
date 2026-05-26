@@ -7,36 +7,27 @@ import {
   Field,
 } from "@fluentui/react-components";
 
-type ContactDataPanelProps = {
-  socialSecurityNumber: string;
-  setSocialSecurityNumber: (v: string) => void;
-  fullName: string;
-  setFullName: (v: string) => void;
-  email: string;
-  setEmail: (v: string) => void;
-  mobilePhone: string;
-  setMobilePhone: (v: string) => void;
-  street: string;
-  setStreet: (v: string) => void;
-  postalCode: string;
-  setPostalCode: (v: string) => void;
+import type { ContactData } from "../types/LookupTypes";
+
+type Props = {
+  contactData: ContactData;
+  setContactData: React.Dispatch<React.SetStateAction<ContactData>>;
 };
 
-export function ContactDataPanel(props: ContactDataPanelProps) {
+export function ContactDataPanel(props: Props) {
   const [jsonMode, setJsonMode] = useState(true);
 
-  const inputJson = JSON.stringify(
-    {
-      socialSecurityNumber: props.socialSecurityNumber,
-      fullName: props.fullName,
-      email: props.email,
-      mobilePhone: props.mobilePhone,
-      street: props.street,
-      postalCode: props.postalCode,
-    },
-    null,
-    2
-  );
+  const inputJson = JSON.stringify(props.contactData, null, 2);
+
+  function updateField<K extends keyof ContactData>(
+    key: K,
+    value: ContactData[K]
+  ) {
+    props.setContactData(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -58,13 +49,7 @@ export function ContactDataPanel(props: ContactDataPanelProps) {
           onChange={(e) => {
             try {
               const v = JSON.parse(e.target.value);
-
-              props.setSocialSecurityNumber(v.socialSecurityNumber ?? "");
-              props.setFullName(v.fullName ?? "");
-              props.setEmail(v.email ?? "");
-              props.setMobilePhone(v.mobilePhone ?? "");
-              props.setStreet(v.street ?? "");
-              props.setPostalCode(v.postalCode ?? "");
+              props.setContactData(v);
             } catch {}
           }}
           style={{ minHeight: 320 }}
@@ -73,27 +58,47 @@ export function ContactDataPanel(props: ContactDataPanelProps) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
           <Field label="Social security number">
-            <Input value={props.socialSecurityNumber} onChange={(e) => props.setSocialSecurityNumber(e.target.value)} />
+            <Input
+              value={props.contactData.socialSecurityNumber ?? ""}
+              onChange={(e) =>
+                updateField("socialSecurityNumber", e.target.value)
+              }
+            />
           </Field>
 
           <Field label="Full name">
-            <Input value={props.fullName} onChange={(e) => props.setFullName(e.target.value)} />
+            <Input
+              value={props.contactData.fullName ?? ""}
+              onChange={(e) => updateField("fullName", e.target.value)}
+            />
           </Field>
 
           <Field label="Email">
-            <Input value={props.email} onChange={(e) => props.setEmail(e.target.value)} />
+            <Input
+              value={props.contactData.email ?? ""}
+              onChange={(e) => updateField("email", e.target.value)}
+            />
           </Field>
 
           <Field label="Mobile phone">
-            <Input value={props.mobilePhone} onChange={(e) => props.setMobilePhone(e.target.value)} />
+            <Input
+              value={props.contactData.mobilePhone ?? ""}
+              onChange={(e) => updateField("mobilePhone", e.target.value)}
+            />
           </Field>
 
           <Field label="Street">
-            <Input value={props.street} onChange={(e) => props.setStreet(e.target.value)} />
+            <Input
+              value={props.contactData.street ?? ""}
+              onChange={(e) => updateField("street", e.target.value)}
+            />
           </Field>
 
           <Field label="Postal code">
-            <Input value={props.postalCode} onChange={(e) => props.setPostalCode(e.target.value)} />
+            <Input
+              value={props.contactData.postalCode ?? ""}
+              onChange={(e) => updateField("postalCode", e.target.value)}
+            />
           </Field>
 
         </div>
