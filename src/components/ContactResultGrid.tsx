@@ -79,6 +79,14 @@ const renderField = (value: string, breakdown?: any) => {
     }),
 
     createTableColumn<any>({
+      columnId: "fuzzyScore",
+      renderHeaderCell: () => "Fuzzy",
+      renderCell: (item) => (
+        <span>{item.fuzzyScore?.toFixed(2)}</span>
+      ),
+    }),
+
+    createTableColumn<any>({
       columnId: "email",
       renderHeaderCell: () => "Email",
       renderCell: (item) =>

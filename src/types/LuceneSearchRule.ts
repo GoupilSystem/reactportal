@@ -1,4 +1,4 @@
-export type LucerneSearchRule = {
+export type LuceneSearchRule = {
   fieldName: string;
   level: number;
   top: number;

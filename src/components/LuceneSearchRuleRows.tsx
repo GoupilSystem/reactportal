@@ -1,13 +1,13 @@
 import { Input, Text } from "@fluentui/react-components";
-import type { LucerneSearchRule } from "../types/LucerneSearchRule";
+import type { LuceneSearchRule } from "../types/LuceneSearchRule";
 
 type Props = {
   label: string;
-  rule: LucerneSearchRule;
-  onChange: (r: LucerneSearchRule) => void;
+  rule: LuceneSearchRule;
+  onChange: (r: LuceneSearchRule) => void;
 };
 
-export function LucerneSearchRuleRow({ label, rule, onChange }: Props) {
+export function LuceneSearchRuleRow({ label, rule, onChange }: Props) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
 

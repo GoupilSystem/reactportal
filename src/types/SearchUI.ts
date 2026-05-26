@@ -1,4 +1,4 @@
 export type SearchUI = {
-  mode: "lucerne" | "query";
-  lucerneFactor: 1 | 2 | 4;
+  mode: "lucene" | "query";
+  luceneFactor: 1 | 2 | 4;
 };

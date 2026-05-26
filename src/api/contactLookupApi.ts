@@ -1,6 +1,6 @@
-export async function matchContact(payload: any) {
+export async function runLookup(payload: any) {
   const res = await fetch(
-    "https://localhost:7064/api/contact-vs-new/dataverse/match-new",
+    "https://localhost:7064/api/contact-lookup/run",
     {
       method: "POST",
       headers: {
@@ -11,7 +11,7 @@ export async function matchContact(payload: any) {
   );
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);  
+    throw new Error(`API error: ${res.status}`);
   }
 
   return await res.json();
