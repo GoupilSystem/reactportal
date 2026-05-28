@@ -12,7 +12,6 @@ import { ExecutionTimeline } from "./ExecutionTimeline.tsx";
 
 export function ContactResultGrid({ result }: { result: any }) {
   const [showAll, setShowAll] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
 
   const items = result?.candidates ?? [];
   const execution = result?.execution;
@@ -20,40 +19,81 @@ export function ContactResultGrid({ result }: { result: any }) {
   const visibleItems = showAll ? items : items.slice(0, 5);
 
   const renderField = (value: string, breakdown?: any) => {
-    if (!value) return null;
+  if (!value) return null;
 
-    let bg: string | undefined;
+  let bg: string | undefined;
 
-    const level = breakdown?.level;
-    if (level === "Strong") bg = "#dff6dd";
-    else if (level === "Medium") bg = "#fff4ce";
-    else if (level === "Weak") bg = "#fde7e9";
+  const level = breakdown?.level;
+  if (level === "Strong") bg = "#dff6dd";
+  else if (level === "Medium") bg = "#fff4ce";
+  else if (level === "Weak") bg = "#fde7e9";
 
-    return (
+  const percent = Math.round((breakdown?.normalizedSimilarity ?? 0) * 100);
+  const abs = Math.round(breakdown?.absoluteSimilarity ?? 0);
+
+  let color = "#e74c3c";
+  if (breakdown?.normalizedSimilarity >= 1) color = "#2ecc71";
+  else if (breakdown?.normalizedSimilarity >= 0.5) color = "#f1c40f";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        width: "100%",
+        height: "100%",
+        padding: "6px 8px",
+        boxSizing: "border-box",
+        borderRadius: 4,
+        background: bg,
+      }}
+    >
+      {/* VALUE */}
+      <div style={{ fontSize: 13, fontWeight: 500 }}>
+        {value}
+      </div>
+
+      {/* BAR */}
+      <div
+        style={{
+          height: 6,
+          width: "100%",
+          background: "#eee",
+          borderRadius: 4,
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${percent}%`,
+            background: color,
+            transition: "width 0.2s ease",
+          }}
+        />
+      </div>
+
+      {/* METRICS */}
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          padding: "6px 8px",
-          boxSizing: "border-box",
-          borderRadius: 4,
-          background: bg,
+          justifyContent: "space-between",
+          fontSize: 10,
+          lineHeight: 1,
+          opacity: 0.75,
+          marginTop: 0,
+          paddingTop: 0,
         }}
       >
-        <span>{value}</span>
-
-        {breakdown && (
-          <span style={{ fontSize: 11, opacity: 0.75 }}>
-            +{breakdown.contributionToGlobalScore} pts (
-            {(breakdown.normalizedSimilarity * 100)?.toFixed(0)}% ×{" "}
-            {breakdown.weight})
-          </span>
-        )}
+        <span>Norm {percent}% · +{breakdown?.contributionToGlobalScore ?? 0}</span>
+        <span>Abs {abs}%</span>
       </div>
-    );
-  };
+    </div>
+  );
+};
+
+  
 
   const columns = [
     createTableColumn<any>({
@@ -68,6 +108,12 @@ export function ContactResultGrid({ result }: { result: any }) {
       renderCell: item => (
         <span>{item.fuzzyScore?.toFixed(2)}</span>
       ),
+    }),
+
+    createTableColumn<any>({
+      columnId: "ssn",
+      renderHeaderCell: () => "SSN",
+      renderCell: item => renderField(item.ssn, item.breakdown?.ssn),
     }),
 
     createTableColumn<any>({
@@ -127,38 +173,9 @@ export function ContactResultGrid({ result }: { result: any }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
-      {/* EXECUTION SUMMARY */}
       {execution && (
-        <>
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.8,
-              padding: "6px 8px",
-              borderBottom: "1px solid #eee",
-              display: "flex",
-              justifyContent: "space-between",
-              cursor: "pointer",
-            }}
-            onClick={() => setShowTimeline(v => !v)}
-          >
-            <span>
-              Total: {execution.totalTimeMs}ms · Search: {execution.searchTimeMs}ms ·
-              Score: {execution.scoreTimeMs}ms · Steps:{" "}
-              {execution.steps?.length ?? 0}
-            </span>
-
-            <span style={{ opacity: 0.6 }}>
-              {showTimeline ? "− hide timeline" : "+ show timeline"}
-            </span>
-          </div>
-
-          {/* COLLAPSIBLE TIMELINE */}
-          {showTimeline && (
-            <ExecutionTimeline steps={execution.steps ?? []} />
-          )}
-        </>
-      )}
+  <ExecutionTimeline steps={execution.steps ?? []} />
+)}
 
       {/* TOOLBAR */}
       <div
@@ -189,7 +206,7 @@ export function ContactResultGrid({ result }: { result: any }) {
                       ? { width: 60, minWidth: 60, maxWidth: 60 }
                       : columnId === "fuzzyScore"
                       ? { width: 70, minWidth: 70, maxWidth: 70 }
-                      : {}
+                      : { paddingLeft: 16 }
                   }
                 >
                   {renderHeaderCell()}

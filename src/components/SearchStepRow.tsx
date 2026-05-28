@@ -1,9 +1,11 @@
-import type { SearchStep, ScoreRule } from "../types/LookupTypes";
-import type { ContactData } from "../types/LookupTypes";
+import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupTypes";
+import type { ContactData, QueryOperator } from "../types/LookupTypes";
 import { Select, Input, Button, Text } from "@fluentui/react-components";
 
 type Props = {
-  step: SearchStep;
+  step: SearchStep | null;
+  stepsLength: number;
+  isAddRow: boolean;
   scoreRule?: ScoreRule;
 
   col: any;
@@ -26,6 +28,8 @@ type Props = {
 
 export function SearchStepRow({
   step,
+  stepsLength,
+  isAddRow,
   scoreRule,
   col,
   contactFields,
@@ -40,6 +44,27 @@ export function SearchStepRow({
 }: Props) {
   const threshold = scoreRule?.thresholdRange ?? [0, 100];
 
+  const isValid = contactFields.some(f => f.key === step?.fieldName);
+
+  const selectValue =
+    step?.fieldName && isValid ? step?.fieldName : "";
+
+  if (isAddRow || !step) {
+    return (
+        <Row>
+          <div style={{ ...cellStyle(col.gap), padding: 8, paddingLeft: 28 }}>
+            <Button
+              size="medium"
+              style= {{borderRadius: 20, background: "#86e8af"}}
+              appearance="subtle"
+              icon={<span style={{ marginBottom: 4, fontSize: 36, color: "#2ecc71" }}>＋</span>}
+              onClick={() => addStep(stepsLength)}
+            />
+          </div>
+        </Row>
+      );
+  }
+  
   return (
     <div>
       {/* SUB HEADER */}
@@ -52,7 +77,7 @@ export function SearchStepRow({
         {step.type === "Lucene" ? (
           <>
             <div style={cellStyle(col.rule1)}>
-              <Text size={200}>Level</Text>
+              <Text size={200}>~</Text>
             </div>
             <div style={cellStyle(col.rule2)}>
               <Text size={200}>Top</Text>
@@ -63,7 +88,9 @@ export function SearchStepRow({
             <div style={cellStyle(col.rule1)}>
               <Text size={200}>Operator</Text>
             </div>
-            <div style={cellStyle(col.rule2)} />
+            <div style={cellStyle(col.rule2)}>
+              <Text size={200}>Length</Text>
+            </div>
           </>
         )}
 
@@ -93,9 +120,14 @@ export function SearchStepRow({
       <Row>
         <div style={cellStyle(col.order)}>{step.order}</div>
 
-        <div style={cellStyle(col.field)}>
+        <div
+          style={{
+            border: isValid ? "none" : "1px solid #e74c3c",
+            borderRadius: 4,
+          }}
+        >
           <Select
-            value={step.fieldName}
+            value={selectValue}
             onChange={(_, d) =>
               updateStep({
                 ...step,
@@ -103,6 +135,8 @@ export function SearchStepRow({
               })
             }
           >
+            <option value="">-- missing field --</option>
+
             {contactFields.map(f => (
               <option key={f.key} value={f.key}>
                 {f.label}
@@ -129,33 +163,33 @@ export function SearchStepRow({
         <div style={cellStyle(col.rule1)}>
           {step.type === "Query" ? (
             <Select
-              value={step.queryRule?.operator ?? "Equal"}
+              value={step.queryRule.operator ?? "Equal"}
               onChange={(_, d) =>
                 updateStep({
                   ...step,
                   queryRule: {
                     ...step.queryRule,
-                    operator: d.value as any,
+                    operator: d.value as QueryOperator,
                   },
                 })
               }
             >
-              <option value="Equal">Equal</option>
-              <option value="GreaterEqual">GreaterEqual</option>
-              <option value="BeginsWith">BeginsWith</option>
-              <option value="EndsWith">EndsWith</option>
-              <option value="Like">Like</option>
+              {queryOperators.map(op => (
+                <option key={op} value={op}>
+                  {op}
+                </option>
+              ))}
             </Select>
           ) : (
             <Input
               type="number"
-              value={String(step.luceneRule?.level ?? 1)}
+              value={String(step.luceneRule.deviation ?? 1)}
               onChange={(_, d) =>
                 updateStep({
                   ...step,
                   luceneRule: {
-                    level: Number(d.value),
-                    top: step.luceneRule?.top ?? 100,
+                    deviation: Number(d.value),
+                    top: step.luceneRule.top ?? 100,
                   },
                 })
               }
@@ -165,15 +199,32 @@ export function SearchStepRow({
         </div>
 
         <div style={cellStyle(col.rule2)}>
-          {step.type === "Lucene" && (
+          {step.type === "Query" ? (
+            step.queryRule?.operator !== "Equal" && (
+              <Input
+                type="number"
+                value={String(step.queryRule?.length ?? 0)}
+                onChange={(_, d) =>
+                  updateStep({
+                    ...step,
+                    queryRule: {
+                      ...step.queryRule,
+                      length: Number(d.value),
+                    },
+                  })
+                }
+                style={{ width: 60 }}
+              />
+            )
+          ) : (
             <Input
               type="number"
-              value={String(step.luceneRule?.top ?? 100)}
+              value={String(step.luceneRule.top ?? 100)}
               onChange={(_, d) =>
                 updateStep({
                   ...step,
                   luceneRule: {
-                    level: step.luceneRule?.level ?? 1,
+                    deviation: step.luceneRule.deviation ?? 1,
                     top: Number(d.value),
                   },
                 })
@@ -255,15 +306,7 @@ export function SearchStepRow({
               size="small"
               appearance="subtle"
               style={{ minWidth: 12, width: 12, padding: 0 }}
-              icon={<span style={{ color: "#2ecc71" }}>＋</span>}
-              onClick={() => addStep(step.order)}
-            />
-
-            <Button
-              size="small"
-              appearance="subtle"
-              style={{ minWidth: 12, width: 12, padding: 0 }}
-              icon={<span style={{ color: "#3498db" }}>↑</span>}
+              icon={<span style={{ fontSize: 24, color: "#3498db" }}>↑</span>}
               onClick={() => moveUp(step.id)}
             />
 
@@ -271,7 +314,7 @@ export function SearchStepRow({
               size="small"
               appearance="subtle"
               style={{ minWidth: 12, width: 12, padding: 0 }}
-              icon={<span style={{ color: "#3498db" }}>↓</span>}
+              icon={<span style={{ fontSize: 24, color: "#3498db" }}>↓</span>}
               onClick={() => moveDown(step.id)}
             />
 
@@ -279,7 +322,7 @@ export function SearchStepRow({
               size="small"
               appearance="subtle"
               style={{ minWidth: 12, width: 12, padding: 0 }}
-              icon={<span style={{ color: "#e74c3c" }}>✕</span>}
+              icon={<span style={{ fontSize: 24, color: "#e74c3c" }}>✕</span>}
               onClick={() => deleteStep(step.id)}
             />
           </Row>

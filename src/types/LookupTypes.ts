@@ -5,7 +5,7 @@ export type ContactLookupRequest = {
 };
 
 export type ContactData = {
-  socialSecurityNumber?: string;
+  SSN?: string;
   fullName?: string;
   email?: string;
   mobilePhone?: string;
@@ -23,19 +23,28 @@ export type SearchStep = {
   order: number;
   fieldName: keyof ContactData;
   type: "Query" | "Lucene";
-  queryRule?: QuerySearchRule;
-  luceneRule?: LuceneSearchRule;
+  queryRule: QuerySearchRule;
+  luceneRule: LuceneSearchRule;
   stopOnMatch: boolean;
 };
 
+export const queryOperators = [
+  "Equal",
+  "BeginsWith",
+  "EndsWith",
+  "Like",
+] as const;
+
+export type QueryOperator = typeof queryOperators[number];
+
 export type QuerySearchRule = {
-  operator: "Equal" | "GreaterEqual" | "BeginsWith" | "EndsWith" | "Like";
-  length?: number;
+  operator: QueryOperator;
+  length: number;
   pattern?: string;
 };
 
 export type LuceneSearchRule = {
-  level: number;
+  deviation: number;
   top: number;
 };
 

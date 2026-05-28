@@ -1,7 +1,7 @@
 import type { ContactData, LookupPlan } from "../types/LookupTypes";
 
 export const defaultContactData: ContactData = {
-    socialSecurityNumber: "25059241837",
+    SSN: "25059241837",
     fullName: "Iselin Renée Lægreid",
     email: "iselin@laegreid.net",
     mobilePhone: "+4792809389",
@@ -17,8 +17,12 @@ export const defaultLookupPlan: LookupPlan = {
       order: 1,
       fieldName: "email",
       type: "Lucene",
+      queryRule: {
+        operator: "Equal",
+        length: 0 
+      },
       luceneRule: {
-        level: 0,
+        deviation: 0,
         top: 50,
       },
       stopOnMatch: true,
@@ -28,8 +32,12 @@ export const defaultLookupPlan: LookupPlan = {
       order: 2,
       fieldName: "mobilePhone",
       type: "Lucene",
+      queryRule: {
+        operator: "Equal",
+        length: 0 
+      },
       luceneRule: {
-        level: 1,
+        deviation: 1,
         top: 15,
       },
       stopOnMatch: true,
@@ -39,8 +47,12 @@ export const defaultLookupPlan: LookupPlan = {
       order: 3,
       fieldName: "fullName",
       type: "Lucene",
+      queryRule: {
+        operator: "Equal",
+        length: 0 
+      },
       luceneRule: {
-        level: 1,
+        deviation: 1,
         top: 15,
       },
       stopOnMatch: false,
@@ -50,8 +62,12 @@ export const defaultLookupPlan: LookupPlan = {
       order: 4,
       fieldName: "street",
       type: "Lucene",
+      queryRule: {
+        operator: "Equal",
+        length: 0 
+      },
       luceneRule: {
-        level: 1,
+        deviation: 1,
         top: 15,
       },
       stopOnMatch: false,
@@ -61,8 +77,12 @@ export const defaultLookupPlan: LookupPlan = {
       order: 5,
       fieldName: "postalCode",
       type: "Lucene",
+      queryRule: {
+        operator: "Equal",
+        length: 0 
+      },
       luceneRule: {
-        level: 1,
+        deviation: 1,
         top: 15,
       },
       stopOnMatch: false,

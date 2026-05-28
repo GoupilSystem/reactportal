@@ -5,21 +5,13 @@ import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupTypes";
 import type { ContactData } from "../types/LookupTypes";
 import { SearchStepRow } from "./SearchStepRow";
 
-const contactFields: { key: keyof ContactData; label: string }[] = [
-  { key: "socialSecurityNumber", label: "SSN" },
-  { key: "fullName", label: "Full Name" },
-  { key: "email", label: "Email" },
-  { key: "mobilePhone", label: "Mobile Phone" },
-  { key: "street", label: "Street" },
-  { key: "postalCode", label: "Postal Code" },
-];
-
 type Props = {
   lookupPlan: LookupPlan;
   setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
+  contactData: ContactData;
 };
 
-export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
+export function LookupPlanPanel({ lookupPlan, setLookupPlan, contactData }: Props) {
   const [jsonMode, setJsonMode] = useState(false);
 
   const viewJson = JSON.stringify(lookupPlan, null, 2);
@@ -28,6 +20,13 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
     () => [...lookupPlan.searchSteps].sort((a, b) => a.order - b.order),
     [lookupPlan.searchSteps]
   );
+
+  const contactFields = useMemo(() => {
+    return Object.keys(contactData).map(key => ({
+      key: key as keyof ContactData,
+      label: key,
+    }));
+  }, [contactData]);
 
   // Shared score state per fieldName
   const scoreRuleMap = useMemo(() => {
@@ -69,7 +68,8 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
         order: afterOrder + 1,
         fieldName: "email",
         type: "Query",
-        queryRule: { operator: "Equal" },
+        queryRule: { operator: "Equal", length: 0 },
+        luceneRule: { deviation: 0, top: 15 },
         stopOnMatch: false,
       };
 
@@ -96,7 +96,10 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
         steps[index - 1].order,
       ];
 
-      return { ...prev, searchSteps: [...steps] };
+      return {
+        ...prev,
+        searchSteps: [...steps].sort((a, b) => a.order - b.order),
+      };
     });
   }
 
@@ -137,7 +140,7 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
 
   const col = {
     order: 20,
-    field: 100,
+    field: 150,
     type: 100,
     rule1: 60,
     rule2: 60,
@@ -146,7 +149,7 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
     min: 60,
     max: 60,
     stop: 20,
-    action: 60,
+    action: 40,
   };
 
   const cellStyle = (width: number): React.CSSProperties => ({
@@ -155,27 +158,28 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
     textAlign: "center",
   });
 
+  const headerStyle = (w: number) => ({
+    ...cellStyle(w),
+    fontWeight: 600,
+  });
+
   const Row = ({ children }: any) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, height: 24 }}>
       {children}
     </div>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Row>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 24 }}>
         <Text weight="semibold">Lookup Plan</Text>
-
-        <div style={{ marginLeft: "auto" }}>
-          <Row>
-            <Text size={200}>JSON</Text>
-            <Switch
-              checked={jsonMode}
-              onChange={(_, d) => setJsonMode(d.checked)}
-            />
-          </Row>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Text size={200}>JSON</Text>
+          <Switch checked={jsonMode} onChange={(_, d) => setJsonMode(d.checked)} />
         </div>
-      </Row>
+      </div>
 
       <div
         style={{
@@ -187,61 +191,51 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan }: Props) {
         }}
       >
         {!jsonMode && (
-          <div style={{ minWidth: 1200 }}>
+          <div style={{ width: "100%" }}>
             {/* HEADER */}
             <Row>
-              <div style={cellStyle(col.order)}>#</div>
-              <div style={cellStyle(col.field)}>Field</div>
-              <div style={cellStyle(col.type)}>Search Type</div>
+              <div style={headerStyle(col.order)}>#</div>
+              <div style={headerStyle(col.field)}>Field</div>
+              <div style={headerStyle(col.type)}>Search Type</div>
               <div style={cellStyle(col.gap)} />
 
-              <div
-                style={{
-                  width: col.rule1 + col.rule2 + 8,
-                  textAlign: "center",
-                  fontWeight: 600,
-                }}
-              >
+              <div style={{ ...headerStyle(col.rule1 + col.rule2 + 8), textAlign: "center" }}>
                 Search Rules
               </div>
 
               <div style={cellStyle(col.gap)} />
 
-              <div
-                style={{
-                  width: col.weight + col.min + col.max + 16,
-                  textAlign: "center",
-                  fontWeight: 600,
-                }}
-              >
+              <div style={{ ...headerStyle(col.weight + col.min + col.max + 16), textAlign: "center" }}>
                 Score Rules
               </div>
 
               <div style={cellStyle(col.gap)} />
-              <div style={cellStyle(col.stop)}>Stop</div>
+              <div style={headerStyle(col.stop)}>Return</div>
               <div style={cellStyle(col.gap)} />
-              <div style={cellStyle(col.action)}>Actions</div>
+              <div style={headerStyle(col.action)}>Actions</div>
             </Row>
 
             {/* ROWS */}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {steps.map(step => (
-                <SearchStepRow
-                  key={step.id}
-                  step={step}
-                  scoreRule={scoreRuleMap.get(step.fieldName)}
-                  updateScoreRule={updateScoreRule}
-                  col={col}
-                  contactFields={contactFields}
-                  updateStep={updateStep}
-                  addStep={addStep}
-                  moveUp={moveUp}
-                  moveDown={moveDown}
-                  deleteStep={deleteStep}
-                  cellStyle={cellStyle}
-                  Row={Row}
-                />
-              ))}
+              {[...steps, null].map((step, index) => (
+              <SearchStepRow
+                key={step?.id ?? "add-row"}
+                step={step}
+                stepsLength={steps.length}
+                isAddRow={index === steps.length}
+                scoreRule={step ? scoreRuleMap.get(step.fieldName) : undefined}
+                updateScoreRule={updateScoreRule}
+                col={col}
+                contactFields={contactFields}
+                updateStep={updateStep}
+                addStep={addStep}
+                moveUp={moveUp}
+                moveDown={moveDown}
+                deleteStep={deleteStep}
+                cellStyle={cellStyle}
+                Row={Row}
+              />
+            ))}
             </div>
           </div>
         )}

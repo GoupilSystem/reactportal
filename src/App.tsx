@@ -38,7 +38,9 @@ const useStyles = makeStyles({
     background: "#f5f6f8",
     paddingBottom: "12px",
     backdropFilter: "blur(6px)",
-  },
+    maxHeight: "40vh",
+    overflowY: "auto",
+  }
 });
 
 export default function App() {
@@ -49,6 +51,26 @@ export default function App() {
 
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [requestHeight, setRequestHeight] = useState(300);
+
+  const startDrag = (e: React.MouseEvent) => {
+  const startY = e.clientY;
+  const startHeight = requestHeight;
+
+  const onMove = (ev: MouseEvent) => {
+    const delta = ev.clientY - startY;
+    setRequestHeight(Math.max(150, startHeight + delta));
+  };
+
+  const onUp = () => {
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onUp);
+  };
+
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+};
 
   async function run() {
     try {
@@ -89,7 +111,7 @@ export default function App() {
 
       {/* TITLE */}
       <div style={{
-        padding: "20px",
+        padding: "10px",
         display: "flex",
         justifyContent: "center"
       }}>
@@ -98,42 +120,61 @@ export default function App() {
         </Text>
       </div>
 
-      {/* REQUEST PANEL */}
-      <div className={styles.stickyHeader}>
-        <RequestPanel
-          contactData={contactData}
-          setContactData={setContactData}
-          lookupPlan={lookupPlan}
-          setLookupPlan={setLookupPlan}
-          run={run}
-          loading={loading}
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      
+        <div
+          style={{
+            height: requestHeight,
+            overflow: "auto",
+          }}
+        >
+          <RequestPanel
+            contactData={contactData}
+            setContactData={setContactData}
+            lookupPlan={lookupPlan}
+            setLookupPlan={setLookupPlan}
+            run={run}
+            loading={loading}
+          />
+        </div>
+
+        <div
+          onMouseDown={startDrag}
+          style={{
+            height: 6,
+            cursor: "row-resize",
+            background: "#ddd",
+          }}
         />
-      </div>
 
-      {/* RESULTS */}
-      <div className={styles.page}>
-        <AnimatePresence mode="popLayout">
-          {results.map(run => (
-            <motion.div
-              key={run.id}
-              layout
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-            >
-              <Card className={styles.resultCard}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <Text weight="semibold">{run.inputName}</Text>
-                  <Text size={200} style={{ opacity: 0.7 }}>
-                    {new Date(run.timestamp).toLocaleTimeString()}
-                  </Text>
-                </div>
+        {/* RESULTS */}
+        <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
+          <div className={styles.page}>
+            <AnimatePresence mode="popLayout">
+              {results.map(run => (
+                <motion.div
+                  key={run.id}
+                  layout
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                >
+                  <Card className={styles.resultCard}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <Text weight="semibold">{run.inputName}</Text>
+                      <Text size={200} style={{ opacity: 0.7 }}>
+                        {new Date(run.timestamp).toLocaleTimeString()}
+                      </Text>
+                    </div>
 
-                <ContactResultGrid result={run.result} />
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                    <ContactResultGrid result={run.result} />
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+
       </div>
 
     </FluentProvider>
