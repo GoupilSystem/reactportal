@@ -1,6 +1,6 @@
 export async function runLookup(payload: any) {
   const res = await fetch(
-    "https://localhost:7064/api/contact-lookup/run",
+    "https://localhost:7064/api/lookup/run",
     {
       method: "POST",
       headers: {

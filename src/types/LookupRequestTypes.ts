@@ -1,7 +1,10 @@
+export type RunMode = "Single" | "Dual";
+
 export type ContactLookupRequest = {
   environment?: string;
-  contactData: ContactData;
+  contactData: ContactData[];
   lookupPlan: LookupPlan;
+  runMode: RunMode;
 };
 
 export type ContactData = {
@@ -35,7 +38,7 @@ export const queryOperators = [
   "Like",
 ] as const;
 
-export type QueryOperator = typeof queryOperators[number];
+export type QueryOperator = (typeof queryOperators)[number];
 
 export type QuerySearchRule = {
   operator: QueryOperator;

@@ -1,5 +1,5 @@
-import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupTypes";
-import type { ContactData, QueryOperator } from "../types/LookupTypes";
+import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupRequestTypes";
+import type { ContactData, QueryOperator } from "../types/LookupRequestTypes";
 import { Select, Input, Button, Text } from "@fluentui/react-components";
 
 type Props = {

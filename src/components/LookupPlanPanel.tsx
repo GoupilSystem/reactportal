@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { Text, Textarea, Switch } from "@fluentui/react-components";
 
-import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupTypes";
-import type { ContactData } from "../types/LookupTypes";
+import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupRequestTypes";
+import type { ContactData } from "../types/LookupRequestTypes";
 import { SearchStepRow } from "./SearchStepRow";
 
 type Props = {

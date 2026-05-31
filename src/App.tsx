@@ -2,18 +2,16 @@ import { useState } from "react";
 import {
   FluentProvider,
   webLightTheme,
-  Card,
   Text,
   makeStyles
 } from "@fluentui/react-components";
 
-import { runLookup } from "./api/contactLookupApi";
-import { ContactResultGrid } from "./components/ContactResultGrid";
+import { runLookup } from "./api/lookupApi";
 import { RequestPanel } from "./components/RequestPanel";
-
-import { motion, AnimatePresence } from "framer-motion";
-
 import { defaultContactData, defaultLookupPlan } from "./defaults/DefaultData";
+import type { ContactData, RunMode } from "./types/LookupRequestTypes";
+import type { ResultTab } from "./types/LookupResultTypes";
+import { ResultPanel } from "./components/ResultPanel";
 
 const useStyles = makeStyles({
   page: {
@@ -22,6 +20,14 @@ const useStyles = makeStyles({
     gap: "24px",
     background: "#f5f6f8",
     padding: "20px",
+    maxWidth: "100%",
+    margin: "0 auto",
+  },
+  result: {
+    display: "flex",
+    flexDirection: "column",
+    background: "#f5f6f8",
+    padding: "10px",
     maxWidth: "100%",
     margin: "0 auto",
   },
@@ -46,13 +52,16 @@ const useStyles = makeStyles({
 export default function App() {
   const styles = useStyles();
 
-  const [contactData, setContactData] = useState(defaultContactData);
+  const [contactData, setContactData] = useState<ContactData[]>(defaultContactData);
   const [lookupPlan, setLookupPlan] = useState(defaultLookupPlan);
 
-  const [results, setResults] = useState<any[]>([]);
+  const [tabs, setTabs] = useState<ResultTab[]>([]);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   const [requestHeight, setRequestHeight] = useState(300);
+  const [runMode, setRunMode] = useState<RunMode>("Single");
 
   const startDrag = (e: React.MouseEvent) => {
   const startY = e.clientY;
@@ -64,43 +73,45 @@ export default function App() {
   };
 
   const onUp = () => {
-    window.removeEventListener("mousemove", onMove);
-    window.removeEventListener("mouseup", onUp);
-  };
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
 
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-};
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
 
   async function run() {
     try {
       setLoading(true);
-
-      // No need for id in the api, just used for add/delete operations in UI
+      
       const payload = {
         contactData,
         lookupPlan: {
           ...lookupPlan,
           searchSteps: lookupPlan.searchSteps.map(({ id, ...s }) => s),
         },
+        runMode,
       };
 
       console.log("Lookup payload:\n", JSON.stringify(payload, null, 2));
-
+      
       const response = await runLookup(payload);
-
-      setResults(prev => [
-        {
+      
+      console.log("API result (raw):", response);
+      
+      setTabs(prev => {
+        const newTab: ResultTab = {
           id: crypto.randomUUID(),
           timestamp: new Date().toISOString(),
-          inputName:
-            contactData.fullName ||
-            contactData.email ||
-            "Unknown",
+          title: `Lookup ${prev.length + 1}`,
           result: response,
-        },
-        ...prev
-      ]);
+        };
+
+        setActiveTab(newTab.id);
+        return [newTab, ...prev];
+      });
+
     } finally {
       setLoading(false);
     }
@@ -135,6 +146,8 @@ export default function App() {
             setLookupPlan={setLookupPlan}
             run={run}
             loading={loading}
+            runMode={runMode}
+            setRunMode={setRunMode}
           />
         </div>
 
@@ -148,6 +161,54 @@ export default function App() {
         />
 
         {/* RESULTS */}
+        <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
+          <div className={styles.result}>
+            <ResultPanel 
+              tabs={tabs}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </div>
+        </div>
+
+        {/* RESULTS
+        <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
+          <div className={styles.page}>
+            <AnimatePresence mode="popLayout">
+              {results.map(run => (
+                <motion.div
+                  key={run.id}
+                  layout
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                >
+                  <Card className={styles.resultCard}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <Text weight="semibold">{run.inputName}</Text>
+                      <Text size={200} style={{ opacity: 0.7 }}>
+                        {new Date(run.timestamp).toLocaleTimeString()}
+                      </Text>
+                    </div>
+                      {run.result.runMode === "Single" ? (
+                        <LookupResultGrid result={run.result.singleResult} />
+                      ) : (
+                        <DualLookupResultGrid result={run.result.dualResult} />
+                      )}
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div> */}
+
+      </div>
+
+    </FluentProvider>
+  );
+}
+
+{/* RESULTS
         <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
           <div className={styles.page}>
             <AnimatePresence mode="popLayout">
@@ -167,16 +228,10 @@ export default function App() {
                       </Text>
                     </div>
 
-                    <ContactResultGrid result={run.result} />
+                    <LookupResultGrid result={run.result} />
                   </Card>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
-        </div>
-
-      </div>
-
-    </FluentProvider>
-  );
-}
+        </div> */}
