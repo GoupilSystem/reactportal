@@ -18,8 +18,15 @@ export function ResultGrid({ result }: Props) {
   const isDual = result.runMode === "Dual";
 
   const gridColumns = isDual
-    ? "160px 250px 250px 150px 200px 120px"
-    : "160px 250px 250px 150px";
+    ? "110px 160px 160px 130px 210px 80px 170px 110px"
+    : "120px 180px 180px 200px 130px 120px";
+
+  const getColor = (action?: string) =>
+    action === "AutoMatch"
+      ? "#2ECC71"
+      : action === "Review"
+      ? "#F1C40F"
+      : "#E74C3C";
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -36,10 +43,12 @@ export function ResultGrid({ result }: Props) {
           borderBottom: "1px solid #ddd",
         }}
       >
+        <div>Top Score</div>
         <div>Full Name</div>
         <div>Email</div>
         <div>Mobile</div>
-        <div>Best Match</div>
+        <div>Street</div>
+        <div>Postal</div>
 
         {isDual && (
           <>
@@ -51,7 +60,7 @@ export function ResultGrid({ result }: Props) {
 
       {/* ROWS */}
       {result.results.map((r, index) => {
-        const contact = r.contactData;
+        const dataInput = r.dataInput;
         const isOpen = selectedIndex === index;
 
         return (
@@ -69,13 +78,32 @@ export function ResultGrid({ result }: Props) {
                 transition: "background 0.2s",
               }}
             >
-              <div>{contact?.fullName}</div>
-              <div>{contact?.email}</div>
-              <div>{contact?.mobilePhone}</div>
-
               <Text weight="semibold">
-                {r.confidence}% {isOpen ? "▲" : "▼"}
-              </Text>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    border: `2px solid ${getColor(r.action)}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  {r.confidence}
+                </div>
+
+              <span>{isOpen ? "▲" : "▼"}</span>
+            </div>
+            </Text>
+              <div>{dataInput?.fullName}</div>
+              <div>{dataInput?.email}</div>
+              <div>{dataInput?.mobilePhone}</div>
+              <div>{dataInput?.street}</div>
+              <div>{dataInput?.postalCode}</div>
 
               {isDual && (
                 <>

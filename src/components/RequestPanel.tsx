@@ -1,16 +1,16 @@
-import { Card, Button } from "@fluentui/react-components";
-import { ContactDataPanel } from "./ContactDataPanel";
+import { Card, Text } from "@fluentui/react-components";
 import { LookupPlanPanel } from "./LookupPlanPanel";
-
+import { DataInputPanel } from "./DataInputPanel";
 import type {
-  ContactData,
+  DataInput,
   LookupPlan,
   RunMode,
 } from "../types/LookupRequestTypes";
 
+
 type Props = {
-  contactData: ContactData[];
-  setContactData: React.Dispatch<React.SetStateAction<ContactData[]>>;
+  dataInput: DataInput[];
+  setDataInput: React.Dispatch<React.SetStateAction<DataInput[]>>;
 
   lookupPlan: LookupPlan;
   setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
@@ -20,6 +20,12 @@ type Props = {
 
   runMode: RunMode;
   setRunMode: React.Dispatch<React.SetStateAction<RunMode>>;
+
+  reviewThreshold: number;
+  setReviewThreshold: React.Dispatch<React.SetStateAction<number>>;
+
+  autoMatchThreshold: number;
+  setAutoMatchThreshold: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export function RequestPanel(props: Props) {
@@ -30,7 +36,7 @@ export function RequestPanel(props: Props) {
     steps.length > 0 &&
     steps.every(step => Boolean(step.fieldName && step.type));
 
-  const hasContacts = (props.contactData?.length ?? 0) > 0;
+  const hasContacts = (props.dataInput?.length ?? 0) > 0;
 
   const canRun = hasValidPlan && hasContacts;
 
@@ -43,32 +49,56 @@ export function RequestPanel(props: Props) {
         flexDirection: "column",
       }}
     >
+      {/* TITLES ROW (shared alignment) */}
+      <div style={{ display: "flex", gap: 36, marginBottom: 0 }}>
+        <div style={{ flex: "0 0 350px" }}>
+          <Text weight="semibold">
+            Input ({props.dataInput.length})
+          </Text>
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <Text weight="semibold">Lookup Plan</Text>
+        </div>
+      </div>
+
       {/* BODY */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         <div style={{ display: "flex", gap: 24 }}>
           
-          {/* LEFT: FULL BATCH EDITOR */}
           <div style={{ flex: "0 0 350px" }}>
-            <ContactDataPanel
-              contactData={props.contactData}
-              setContactData={props.setContactData}
+            <DataInputPanel
+              dataInput={props.dataInput}
+              setDataInput={props.setDataInput}
             />
           </div>
 
-          {/* RIGHT: LOOKUP PLAN */}
           <div style={{ flex: 1 }}>
             <LookupPlanPanel
               lookupPlan={props.lookupPlan}
               setLookupPlan={props.setLookupPlan}
-              contactData={props.contactData[0]} // optional: first sample contact
+              dataInput={props.dataInput[0]}
+              loading={props.loading}
+              onRunSingle={() => props.run("Single")}
+              onRunDual={() => props.run("Dual")}
+              reviewThreshold={props.reviewThreshold}
+              setReviewThreshold={props.setReviewThreshold}
+              autoMatchThreshold={props.autoMatchThreshold}
+              setAutoMatchThreshold={props.setAutoMatchThreshold}
             />
           </div>
 
         </div>
       </div>
+    </Card>
 
-      {/* FOOTER */}
-      <div
+      
+    
+  );
+}
+
+{/* FOOTER */}
+      {/* <div
         style={{
           display: "flex",
           justifyContent: "flex-end",
@@ -94,7 +124,4 @@ export function RequestPanel(props: Props) {
         >
           Fuzzy VS Legacy
         </Button>
-      </div>
-    </Card>
-  );
-}
+      </div> */}

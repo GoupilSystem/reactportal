@@ -1,14 +1,14 @@
-import type { ContactData } from "./LookupRequestTypes";
+import type { DataInput } from "./LookupRequestTypes";
 
-export type Mode = "Single" | "Dual";
+export type RunMode = "Single" | "Dual";
 
 export type LookupResult = {
-  runMode: Mode;
+  runMode: RunMode;
   results: SingleResult[];
 };
 
 export type SingleResult = {
-  contactData: ContactData;
+  dataInput: DataInput;
 
   action: string;
   candidateCount: number;
@@ -23,26 +23,25 @@ export type SingleResult = {
   vsLegacyDiff?: VsLegacyDiff;
 };
 
-export type ContactLookupResult = {
-  action: string;
-  candidateCount: number;
-  confidence: number;
-  contactId?: string;
-  candidates: ContactCandidate[];
-  execution: LookupExecutionReport;
-};
-
 export type ContactCandidate = {
   contactId: string;
+
   ssn?: string;
   fullName?: string;
   email?: string;
   mobilePhone?: string;
   street?: string;
   postalCode?: string;
-  score: number;
-  fuzzyScore: number;
+
+  scoring: CandidateScoring;
   breakdown: ScoreBreakdown;
+};
+
+export type CandidateScoring = {
+  score: number;
+  fuzzyScore: number | null;
+  fuzzySourceField: string | null;
+  action: string;
 };
 
 export type ScoreBreakdown = {
@@ -50,7 +49,8 @@ export type ScoreBreakdown = {
   email?: FieldScore;
   mobilePhone?: FieldScore;
   fullName?: FieldScore;
-  address?: FieldScore;
+  street?: FieldScore;
+  postalCode?: FieldScore;
 };
 
 export type FieldScore = {
@@ -60,8 +60,6 @@ export type FieldScore = {
   weight: number;
   contributionToGlobalScore: number;
   used: boolean;
-  level?: string;
-  thresholdRange: [number, number];
 };
 
 export type LookupExecutionReport = {
@@ -94,11 +92,11 @@ export type VsLegacyDiff = {
 };
 
 export type ResultTab = {
-    id: string;
-    title: string;
-    timestamp: string;
-    result: LookupResult;
-  };
+  id: string;
+  title: string;
+  timestamp: string;
+  result: LookupResult;
+};
 
 export type ResultRow = {
   key: string;

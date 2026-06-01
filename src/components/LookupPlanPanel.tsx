@@ -1,32 +1,60 @@
 import { useState, useMemo } from "react";
-import { Text, Textarea, Switch } from "@fluentui/react-components";
+import { Text, Textarea, Switch, Button } from "@fluentui/react-components";
 
 import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupRequestTypes";
-import type { ContactData } from "../types/LookupRequestTypes";
+import type { DataInput } from "../types/LookupRequestTypes";
 import { SearchStepRow } from "./SearchStepRow";
+import { ThresholdBar } from "./ThresholdBar";
 
 type Props = {
   lookupPlan: LookupPlan;
   setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
-  contactData: ContactData;
+  dataInput: DataInput;
+
+  onRunSingle: () => void;
+  onRunDual: () => void;
+
+  loading: boolean;
+
+  reviewThreshold: number;
+  setReviewThreshold: React.Dispatch<React.SetStateAction<number>>;
+
+  autoMatchThreshold: number;
+  setAutoMatchThreshold: React.Dispatch<React.SetStateAction<number>>;
 };
 
-export function LookupPlanPanel({ lookupPlan, setLookupPlan, contactData }: Props) {
-  const [jsonMode, setJsonMode] = useState(false);
-
-  const viewJson = JSON.stringify(lookupPlan, null, 2);
-
+export function LookupPlanPanel({
+  lookupPlan,
+  setLookupPlan,
+  dataInput,
+  onRunSingle,
+  onRunDual,
+  loading,
+  reviewThreshold,
+  setReviewThreshold,
+  autoMatchThreshold,
+  setAutoMatchThreshold,
+}: Props) {
+  
   const steps = useMemo(
     () => [...lookupPlan.searchSteps].sort((a, b) => a.order - b.order),
     [lookupPlan.searchSteps]
   );
 
+  const hasValidPlan =
+    steps.length > 0 &&
+    steps.every(step => Boolean(step.fieldName && step.type));
+
+  const hasContacts = !!dataInput;
+
+  const canRun = hasValidPlan && hasContacts;
+
   const contactFields = useMemo(() => {
-    return Object.keys(contactData).map(key => ({
-      key: key as keyof ContactData,
+    return Object.keys(dataInput).map(key => ({
+      key: key as keyof DataInput,
       label: key,
     }));
-  }, [contactData]);
+  }, [dataInput]);
 
   // Shared score state per fieldName
   const scoreRuleMap = useMemo(() => {
@@ -38,7 +66,7 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan, contactData }: Prop
   }, [lookupPlan.scoreRules]);
 
   function updateScoreRule(
-    fieldName: keyof ContactData,
+    fieldName: keyof DataInput,
     patch: Partial<ScoreRule>
   ) {
     setLookupPlan(prev => {
@@ -159,8 +187,7 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan, contactData }: Prop
   });
 
   const headerStyle = (w: number) => ({
-    ...cellStyle(w),
-    fontWeight: 600,
+    ...cellStyle(w)
   });
 
   const Row = ({ children }: any) => (
@@ -170,88 +197,127 @@ export function LookupPlanPanel({ lookupPlan, setLookupPlan, contactData }: Prop
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+      {/* TOP PANEL */}
+      <div
+        style={{
+          padding: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
+        {/* HEADER ROW */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between", // 👈 KEY FIX
+            gap: 200,
+          }}
+        >
+          {/* LEFT: THRESHOLD */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <ThresholdBar
+              review={reviewThreshold}
+              autoMatch={autoMatchThreshold}
+              onChange={(r, a) => {
+                setReviewThreshold(r);
+                setAutoMatchThreshold(a);
+              }}
+            />
+          </div>
+
+          {/* RIGHT: BUTTONS */}
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <Button
+              appearance="primary"
+              onClick={onRunSingle}
+              disabled={loading || !canRun}
+            >
+              Fuzzy
+            </Button>
+
+            <Button
+              onClick={onRunDual}
+              disabled={loading || !canRun}
+            >
+              Fuzzy vs Legacy
+            </Button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* SEPARATOR */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       
       {/* HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 24 }}>
-        <Text weight="semibold">Lookup Plan</Text>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Text size={200}>JSON</Text>
-          <Switch checked={jsonMode} onChange={(_, d) => setJsonMode(d.checked)} />
-        </div>
+        <Text weight="semibold">Steps</Text>
       </div>
 
       <div
         style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
           padding: 12,
+          paddingTop: 4, 
           background: "#fff",
           overflowX: "auto",
         }}
       >
-        {!jsonMode && (
-          <div style={{ width: "100%" }}>
-            {/* HEADER */}
-            <Row>
-              <div style={headerStyle(col.order)}>#</div>
-              <div style={headerStyle(col.field)}>Field</div>
-              <div style={headerStyle(col.type)}>Search Type</div>
-              <div style={cellStyle(col.gap)} />
+        
+        <div style={{ width: "100%" }}>
+          {/* HEADER */}
+          <Row>
+            <div style={headerStyle(col.order)}>#</div>
+            <div style={headerStyle(col.field)}>Field</div>
+            <div style={headerStyle(col.type)}>Search Type</div>
+            <div style={cellStyle(col.gap)} />
 
-              <div style={{ ...headerStyle(col.rule1 + col.rule2 + 8), textAlign: "center" }}>
-                Search Rules
-              </div>
-
-              <div style={cellStyle(col.gap)} />
-
-              <div style={{ ...headerStyle(col.weight + col.min + col.max + 16), textAlign: "center" }}>
-                Score Rules
-              </div>
-
-              <div style={cellStyle(col.gap)} />
-              <div style={headerStyle(col.stop)}>Return</div>
-              <div style={cellStyle(col.gap)} />
-              <div style={headerStyle(col.action)}>Actions</div>
-            </Row>
-
-            {/* ROWS */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {[...steps, null].map((step, index) => (
-              <SearchStepRow
-                key={step?.id ?? "add-row"}
-                step={step}
-                stepsLength={steps.length}
-                isAddRow={index === steps.length}
-                scoreRule={step ? scoreRuleMap.get(step.fieldName) : undefined}
-                updateScoreRule={updateScoreRule}
-                col={col}
-                contactFields={contactFields}
-                updateStep={updateStep}
-                addStep={addStep}
-                moveUp={moveUp}
-                moveDown={moveDown}
-                deleteStep={deleteStep}
-                cellStyle={cellStyle}
-                Row={Row}
-              />
-            ))}
+            <div style={{ ...headerStyle(col.rule1 + col.rule2 + 8), textAlign: "center" }}>
+              Search Rules
             </div>
-          </div>
-        )}
 
-        {jsonMode && (
-          <Textarea
-            value={viewJson}
-            onChange={e => {
-              try {
-                setLookupPlan(JSON.parse(e.target.value));
-              } catch {}
-            }}
-            style={{ width: "100%", minHeight: 320 }}
-          />
-        )}
+            <div style={cellStyle(col.gap)} />
+
+            <div style={{ ...headerStyle(col.weight + col.min + col.max + 16), textAlign: "center" }}>
+              Score Rules
+            </div>
+
+            <div style={cellStyle(col.gap)} />
+            <div style={headerStyle(col.stop)}>Return</div>
+            <div style={cellStyle(col.gap)} />
+            <div style={headerStyle(col.action)}>Actions</div>
+          </Row>
+
+          {/* ROWS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[...steps, null].map((step, index) => (
+            <SearchStepRow
+              key={step?.id ?? "add-row"}
+              step={step}
+              stepsLength={steps.length}
+              isAddRow={index === steps.length}
+              scoreRule={step ? scoreRuleMap.get(step.fieldName) : undefined}
+              updateScoreRule={updateScoreRule}
+              col={col}
+              contactFields={contactFields}
+              updateStep={updateStep}
+              addStep={addStep}
+              moveUp={moveUp}
+              moveDown={moveDown}
+              deleteStep={deleteStep}
+              cellStyle={cellStyle}
+              Row={Row}
+            />
+          ))}
+          </div>
+        </div>
+        
       </div>
+    </div>
+
     </div>
   );
 }

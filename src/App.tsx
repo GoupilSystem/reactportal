@@ -8,8 +8,8 @@ import {
 
 import { runLookup } from "./api/lookupApi";
 import { RequestPanel } from "./components/RequestPanel";
-import { defaultContactData, defaultLookupPlan } from "./defaults/DefaultData";
-import type { ContactData, RunMode } from "./types/LookupRequestTypes";
+import { defaultDataInput, defaultLookupPlan } from "./defaults/DefaultData";
+import type { DataInput, RunMode } from "./types/LookupRequestTypes";
 import type { ResultTab } from "./types/LookupResultTypes";
 import { ResultPanel } from "./components/ResultPanel";
 
@@ -52,8 +52,11 @@ const useStyles = makeStyles({
 export default function App() {
   const styles = useStyles();
 
-  const [contactData, setContactData] = useState<ContactData[]>(defaultContactData);
+  const [dataInput, setDataInput] = useState<DataInput[]>(defaultDataInput);
   const [lookupPlan, setLookupPlan] = useState(defaultLookupPlan);
+
+  const [reviewThreshold, setReviewThreshold] = useState(50);
+  const [autoMatchThreshold, setAutoMatchThreshold] = useState(80);
 
   const [tabs, setTabs] = useState<ResultTab[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
@@ -86,9 +89,11 @@ export default function App() {
       setLoading(true);
 
       const payload = {
-        contactData,
+        dataInput,
         lookupPlan: {
           ...lookupPlan,
+          reviewThreshold,
+          autoMatchThreshold,
           searchSteps: lookupPlan.searchSteps.map(({ id, ...s }) => s),
         },
         runMode: mode,
@@ -123,7 +128,8 @@ export default function App() {
 
       {/* TITLE */}
       <div style={{
-        padding: "10px",
+        padding: 5,
+        paddingTop: 10,
         display: "flex",
         justifyContent: "center"
       }}>
@@ -141,14 +147,18 @@ export default function App() {
           }}
         >
           <RequestPanel
-            contactData={contactData}
-            setContactData={setContactData}
+            dataInput={dataInput}
+            setDataInput={setDataInput}
             lookupPlan={lookupPlan}
             setLookupPlan={setLookupPlan}
             run={run}
             loading={loading}
             runMode={runMode}
             setRunMode={setRunMode}
+            reviewThreshold={reviewThreshold}
+            setReviewThreshold={setReviewThreshold}
+            autoMatchThreshold={autoMatchThreshold}
+            setAutoMatchThreshold={setAutoMatchThreshold}
           />
         </div>
 

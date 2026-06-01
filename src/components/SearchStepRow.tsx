@@ -1,5 +1,5 @@
 import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupRequestTypes";
-import type { ContactData, QueryOperator } from "../types/LookupRequestTypes";
+import type { DataInput, QueryOperator } from "../types/LookupRequestTypes";
 import { Select, Input, Button, Text } from "@fluentui/react-components";
 
 type Props = {
@@ -9,11 +9,11 @@ type Props = {
   scoreRule?: ScoreRule;
 
   col: any;
-  contactFields: { key: keyof ContactData; label: string }[];
+  contactFields: { key: keyof DataInput; label: string }[];
 
   updateStep: (s: SearchStep) => void;
   updateScoreRule: (
-    fieldName: keyof ContactData,
+    fieldName: keyof DataInput,
     patch: Partial<ScoreRule>
   ) => void;
 
@@ -131,7 +131,7 @@ export function SearchStepRow({
             onChange={(_, d) =>
               updateStep({
                 ...step,
-                fieldName: d.value as keyof ContactData,
+                fieldName: d.value as keyof DataInput,
               })
             }
           >

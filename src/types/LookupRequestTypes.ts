@@ -1,13 +1,12 @@
 export type RunMode = "Single" | "Dual";
 
 export type ContactLookupRequest = {
-  environment?: string;
-  contactData: ContactData[];
+  dataInput: DataInput[];
   lookupPlan: LookupPlan;
   runMode: RunMode;
 };
 
-export type ContactData = {
+export type DataInput = {
   SSN?: string;
   fullName?: string;
   email?: string;
@@ -17,6 +16,8 @@ export type ContactData = {
 };
 
 export type LookupPlan = {
+  reviewThreshold: number;
+  autoMatchThreshold: number;
   searchSteps: SearchStep[];
   scoreRules?: ScoreRule[];
 };
@@ -24,7 +25,7 @@ export type LookupPlan = {
 export type SearchStep = {
   id: string;
   order: number;
-  fieldName: keyof ContactData;
+  fieldName: keyof DataInput;
   type: "Query" | "Lucene";
   queryRule: QuerySearchRule;
   luceneRule: LuceneSearchRule;
@@ -52,7 +53,7 @@ export type LuceneSearchRule = {
 };
 
 export type ScoreRule = {
-  fieldName: keyof ContactData;
+  fieldName: keyof DataInput;
   weight: number;
   thresholdRange: [number, number];
 };

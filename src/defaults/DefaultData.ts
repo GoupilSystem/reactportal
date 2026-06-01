@@ -1,6 +1,6 @@
-import type { ContactData, LookupPlan } from "../types/LookupRequestTypes";
+import type { DataInput, LookupPlan } from "../types/LookupRequestTypes";
 
-export const defaultContactData: ContactData[] = [
+export const defaultDataInput: DataInput[] = [
   {
     "SSN": "25059241837",
     "fullName": "Iselin Renée Lægreid",
@@ -20,6 +20,8 @@ export const defaultContactData: ContactData[] = [
 ];
 
 export const defaultLookupPlan: LookupPlan = {
+  reviewThreshold: 50,
+  autoMatchThreshold: 80,
   searchSteps: [
     {
       id: crypto.randomUUID(),
@@ -32,7 +34,7 @@ export const defaultLookupPlan: LookupPlan = {
       },
       luceneRule: {
         deviation: 1,
-        top: 50,
+        top: 20,
       },
       stopOnMatch: false,
     },
@@ -47,7 +49,7 @@ export const defaultLookupPlan: LookupPlan = {
       },
       luceneRule: {
         deviation: 1,
-        top: 15,
+        top: 20,
       },
       stopOnMatch: false,
     },
@@ -62,7 +64,7 @@ export const defaultLookupPlan: LookupPlan = {
       },
       luceneRule: {
         deviation: 1,
-        top: 15,
+        top: 20,
       },
       stopOnMatch: false,
     },
@@ -77,7 +79,7 @@ export const defaultLookupPlan: LookupPlan = {
       },
       luceneRule: {
         deviation: 1,
-        top: 15,
+        top: 20,
       },
       stopOnMatch: false,
     },
@@ -92,7 +94,7 @@ export const defaultLookupPlan: LookupPlan = {
       },
       luceneRule: {
         deviation: 1,
-        top: 15,
+        top: 20,
       },
       stopOnMatch: false,
     },
@@ -102,22 +104,27 @@ export const defaultLookupPlan: LookupPlan = {
     {
       fieldName: "email",
       weight: 40,
-      thresholdRange: [50, 90],
+      thresholdRange: [75, 100],
     },
     {
       fieldName: "mobilePhone",
       weight: 30,
-      thresholdRange: [70, 100],
+      thresholdRange: [85, 100],
     },
     {
       fieldName: "fullName",
-      weight: 20,
-      thresholdRange: [60, 95],
+      weight: 10,
+      thresholdRange: [70, 100],
     },
     {
       fieldName: "street",
       weight: 10,
-      thresholdRange: [50, 90],
+      thresholdRange: [50, 100],
     },
+    {
+      fieldName: "postalCode",
+      weight: 10,
+      thresholdRange: [85, 100],
+    }
   ],
 };

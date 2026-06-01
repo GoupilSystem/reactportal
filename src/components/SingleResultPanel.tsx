@@ -37,11 +37,6 @@ export function SingleResultPanel({ result }: Props) {
 
     let bg: string | undefined;
 
-    const level = breakdown?.level;
-    if (level === "Strong") bg = "#dff6dd";
-    else if (level === "Medium") bg = "#fff4ce";
-    else if (level === "Weak") bg = "#fde7e9";
-
     const percent = Math.round((breakdown?.normalizedSimilarity ?? 0) * 100);
     const abs = Math.round(breakdown?.absoluteSimilarity ?? 0);
 
@@ -93,11 +88,18 @@ export function SingleResultPanel({ result }: Props) {
           style={{
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "baseline",
             fontSize: 10,
-            opacity: 0.75,
+            opacity: 0.85,
           }}
         >
-          <span>Norm {percent}% · +{breakdown?.contributionToGlobalScore ?? 0}</span>
+          <span>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>
+              {breakdown?.contributionToGlobalScore ?? 0}pts
+            </span>
+            {" "}· Norm {percent}%
+          </span>
+
           <span>Abs {abs}%</span>
         </div>
       </div>
@@ -106,15 +108,45 @@ export function SingleResultPanel({ result }: Props) {
 
   const columns = [
     createTableColumn<any>({
-      columnId: "score",
-      renderHeaderCell: () => "Score",
-      renderCell: item => <b>{item.score}</b>,
+        columnId: "score",
+        renderHeaderCell: () => "Score",
+        renderCell: item => {
+          const action = item.scoring?.action;
+
+          const color =
+            action === "AutoMatch"
+              ? "#2ECC71"
+              : action === "Review"
+              ? "#F1C40F"
+              : "#E74C3C";
+
+        return (
+          <div
+            style={{
+              width: 28,
+              height: 26,
+              borderRadius: "50%",
+              border: `2px solid ${color}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 600,
+              fontSize: 14,
+            }}
+          >
+            {item.scoring?.score ?? 0}
+          </div>
+        );
+      },
     }),
 
     createTableColumn<any>({
       columnId: "fuzzyScore",
       renderHeaderCell: () => "Fuzzy",
-      renderCell: item => item.fuzzyScore?.toFixed(2),
+      renderCell: item =>
+        item.scoring.fuzzyScore != null
+          ? `${item.scoring.fuzzyScore.toFixed(2)} (${item.scoring.fuzzySourceField ?? "?"})`
+          : "-",
     }),
 
     createTableColumn<any>({
@@ -144,13 +176,17 @@ export function SingleResultPanel({ result }: Props) {
     }),
 
     createTableColumn<any>({
-      columnId: "address",
-      renderHeaderCell: () => "Address",
+      columnId: "street",
+      renderHeaderCell: () => "Street",
       renderCell: item =>
-        renderField(
-          `${item.street ?? ""} ${item.postalCode ?? ""}`.trim(),
-          item.breakdown?.address
-        ),
+        renderField(item.street, item.breakdown?.street),
+    }),
+
+    createTableColumn<any>({
+      columnId: "postalCode",
+      renderHeaderCell: () => "Postal Code",
+      renderCell: item =>
+        renderField(item.postalCode, item.breakdown?.postalCode),
     }),
 
     createTableColumn<any>({
@@ -206,8 +242,10 @@ export function SingleResultPanel({ result }: Props) {
                     columnId === "score"
                       ? { width: 60, minWidth: 60, maxWidth: 60 }
                       : columnId === "fuzzyScore"
-                      ? { width: 70, minWidth: 70, maxWidth: 70 }
-                      : { paddingLeft: 16 }
+                      ? { width: 80, minWidth: 80, maxWidth: 80 }
+                      : columnId === "ssn"
+                      ? { width: 60, minWidth: 60, maxWidth: 60 }
+                      : { paddingLeft: 20 }
                   }
                 >
                   {renderHeaderCell()}
@@ -222,12 +260,14 @@ export function SingleResultPanel({ result }: Props) {
                 {({ renderCell, columnId }) => (
                   <DataGridCell
                     style={
-                      columnId === "score"
-                        ? { width: 60, minWidth: 60, maxWidth: 60 }
-                        : columnId === "fuzzyScore"
-                        ? { width: 70, minWidth: 70, maxWidth: 70 }
-                        : {}
-                    }
+                    columnId === "score"
+                      ? { width: 60, minWidth: 60, maxWidth: 60 }
+                      : columnId === "fuzzyScore"
+                      ? { width: 80, minWidth: 80, maxWidth: 80 }
+                      : columnId === "ssn"
+                      ? { width: 60, minWidth: 60, maxWidth: 60 }
+                      : {}
+                  }
                   >
                     {renderCell(item)}
                   </DataGridCell>
