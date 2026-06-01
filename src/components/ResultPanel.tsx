@@ -51,7 +51,12 @@ export function ResultPanel({ tabs, activeTab, setActiveTab }: Props) {
 
       {/* ACTIVE CONTENT */}
       <div style={{ marginTop: 6 }}>
-        {active && <ResultGrid result={active.result} />}
+        {active && (
+          <ResultGrid
+            key={active.id}
+            result={active.result}
+          />
+        )}
       </div>
 
     </div>

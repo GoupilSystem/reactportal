@@ -1,5 +1,5 @@
 import { Text } from "@fluentui/react-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { LookupResult } from "../types/LookupResultTypes";
 import { SingleResultPanel } from "./SingleResultPanel";
@@ -11,6 +11,10 @@ type Props = {
 export function ResultGrid({ result }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [result]);
+  
   const isDual = result.runMode === "Dual";
 
   const gridColumns = isDual
@@ -51,7 +55,7 @@ export function ResultGrid({ result }: Props) {
         const isOpen = selectedIndex === index;
 
         return (
-          <div key={r.contactId ?? index}>
+          <div key={`${result.runMode}-${index}`}>
             <div
               onClick={() => setSelectedIndex(isOpen ? null : index)}
               style={{

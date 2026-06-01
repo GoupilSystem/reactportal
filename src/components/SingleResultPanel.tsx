@@ -7,7 +7,7 @@ import {
   DataGridHeaderCell,
   createTableColumn
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { SingleResult } from "../types/LookupResultTypes";
 import { ExecutionTimeline } from "./ExecutionTimeline";
@@ -18,6 +18,10 @@ type Props = {
 
 export function SingleResultPanel({ result }: Props) {
   const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    setShowAll(false);
+  }, [result]); // resets only when result object changes (new run/tab content)
 
   const items = result.candidates ?? [];
   const execution = result.execution;

@@ -81,34 +81,35 @@ export default function App() {
     window.addEventListener("mouseup", onUp);
   };
 
-  async function run() {
+  async function run(mode: RunMode) {
     try {
       setLoading(true);
-      
+
       const payload = {
         contactData,
         lookupPlan: {
           ...lookupPlan,
           searchSteps: lookupPlan.searchSteps.map(({ id, ...s }) => s),
         },
-        runMode,
+        runMode: mode,
       };
 
       console.log("Lookup payload:\n", JSON.stringify(payload, null, 2));
-      
+
       const response = await runLookup(payload);
-      
-      console.log("API result (raw):", response);
-      
+
       setTabs(prev => {
+        const id = crypto.randomUUID();
+
         const newTab: ResultTab = {
-          id: crypto.randomUUID(),
+          id,
           timestamp: new Date().toISOString(),
           title: `Lookup ${prev.length + 1}`,
           result: response,
         };
 
-        setActiveTab(newTab.id);
+        setActiveTab(id);
+
         return [newTab, ...prev];
       });
 
@@ -171,67 +172,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* RESULTS
-        <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
-          <div className={styles.page}>
-            <AnimatePresence mode="popLayout">
-              {results.map(run => (
-                <motion.div
-                  key={run.id}
-                  layout
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                >
-                  <Card className={styles.resultCard}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <Text weight="semibold">{run.inputName}</Text>
-                      <Text size={200} style={{ opacity: 0.7 }}>
-                        {new Date(run.timestamp).toLocaleTimeString()}
-                      </Text>
-                    </div>
-                      {run.result.runMode === "Single" ? (
-                        <LookupResultGrid result={run.result.singleResult} />
-                      ) : (
-                        <DualLookupResultGrid result={run.result.dualResult} />
-                      )}
-                  </Card>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div> */}
-
       </div>
 
     </FluentProvider>
   );
 }
-
-{/* RESULTS
-        <div style={{ flex: 1, overflow: "auto", background: "#f5f6f8" }}>
-          <div className={styles.page}>
-            <AnimatePresence mode="popLayout">
-              {results.map(run => (
-                <motion.div
-                  key={run.id}
-                  layout
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                >
-                  <Card className={styles.resultCard}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <Text weight="semibold">{run.inputName}</Text>
-                      <Text size={200} style={{ opacity: 0.7 }}>
-                        {new Date(run.timestamp).toLocaleTimeString()}
-                      </Text>
-                    </div>
-
-                    <LookupResultGrid result={run.result} />
-                  </Card>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div> */}

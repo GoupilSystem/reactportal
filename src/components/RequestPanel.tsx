@@ -15,7 +15,7 @@ type Props = {
   lookupPlan: LookupPlan;
   setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
 
-  run: () => void;
+  run: (mode: RunMode) => void;
   loading: boolean;
 
   runMode: RunMode;
@@ -23,14 +23,14 @@ type Props = {
 };
 
 export function RequestPanel(props: Props) {
-  const hasValidPlan =
-    (props.lookupPlan.searchSteps?.length ?? 0) > 0 &&
-    props.lookupPlan.searchSteps.every(
-      (step) => step.fieldName && step.type
-    );
+  
+  const steps = props.lookupPlan.searchSteps ?? [];
 
-  const hasContacts =
-    Array.isArray(props.contactData) && props.contactData.length > 0;
+  const hasValidPlan =
+    steps.length > 0 &&
+    steps.every(step => Boolean(step.fieldName && step.type));
+
+  const hasContacts = (props.contactData?.length ?? 0) > 0;
 
   const canRun = hasValidPlan && hasContacts;
 
@@ -81,24 +81,18 @@ export function RequestPanel(props: Props) {
       >
         <Button
           appearance="primary"
-          onClick={() => {
-            props.setRunMode("Single");
-            props.run();
-          }}
-          disabled={props.loading}
+          onClick={() => props.run("Single")}
+          disabled={props.loading || !canRun}
         >
-          Single
+          Fuzzy
         </Button>
 
         <Button
           appearance="primary"
-          onClick={() => {
-            props.setRunMode("Dual");
-            props.run();
-          }}
-          disabled={props.loading}
+          onClick={() => props.run("Dual")}
+          disabled={props.loading || !canRun}
         >
-          Dual
+          Fuzzy VS Legacy
         </Button>
       </div>
     </Card>
