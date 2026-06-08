@@ -1,4 +1,4 @@
-export type RunMode = "Single" | "Dual";
+export type RunMode = "NewLookup" | "VsLegacyLookup";
 
 export type ContactLookupRequest = {
   dataInput: DataInput[];
@@ -7,12 +7,20 @@ export type ContactLookupRequest = {
 };
 
 export type DataInput = {
-  SSN?: string;
+  // Contact
+  ssn?: string;
   fullName?: string;
-  email?: string;
   mobilePhone?: string;
+  // Account
+  organizationNumber?: string;
+  telephone?: string;
+  name?: string;
+  // Shared
+  email?: string;
   street?: string;
   postalCode?: string;
+  city?: string;
+  country?: string;
 };
 
 export type LookupPlan = {
@@ -56,4 +64,10 @@ export type ScoreRule = {
   fieldName: keyof DataInput;
   weight: number;
   thresholdRange: [number, number];
+};
+
+export type FieldOption = {
+  key: keyof DataInput;
+  label: string;
+  group: "Contact" | "Account" | "Shared";
 };

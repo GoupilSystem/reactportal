@@ -6,6 +6,7 @@ import type {
   LookupPlan,
   RunMode,
 } from "../types/LookupRequestTypes";
+import { useEffect } from "react";
 
 
 type Props = {
@@ -30,16 +31,6 @@ type Props = {
 
 export function RequestPanel(props: Props) {
   
-  const steps = props.lookupPlan.searchSteps ?? [];
-
-  const hasValidPlan =
-    steps.length > 0 &&
-    steps.every(step => Boolean(step.fieldName && step.type));
-
-  const hasContacts = (props.dataInput?.length ?? 0) > 0;
-
-  const canRun = hasValidPlan && hasContacts;
-
   return (
     <Card
       style={{
@@ -73,55 +64,23 @@ export function RequestPanel(props: Props) {
             />
           </div>
 
-          <div style={{ flex: 1 }}>
-            <LookupPlanPanel
-              lookupPlan={props.lookupPlan}
-              setLookupPlan={props.setLookupPlan}
-              dataInput={props.dataInput[0]}
-              loading={props.loading}
-              onRunSingle={() => props.run("Single")}
-              onRunDual={() => props.run("Dual")}
-              reviewThreshold={props.reviewThreshold}
-              setReviewThreshold={props.setReviewThreshold}
-              autoMatchThreshold={props.autoMatchThreshold}
-              setAutoMatchThreshold={props.setAutoMatchThreshold}
-            />
-          </div>
+          <LookupPlanPanel
+            lookupPlan={props.lookupPlan}
+            setLookupPlan={props.setLookupPlan}
+            dataInput={props.dataInput}
+            loading={props.loading}
+            onRunNewLookup={() => props.run("NewLookup")}
+            onRunVsLegacyLookup={() => props.run("VsLegacyLookup")}
+            reviewThreshold={props.reviewThreshold}
+            setReviewThreshold={props.setReviewThreshold}
+            autoMatchThreshold={props.autoMatchThreshold}
+            setAutoMatchThreshold={props.setAutoMatchThreshold}
+          />
 
         </div>
       </div>
     </Card>
-
       
     
   );
 }
-
-{/* FOOTER */}
-      {/* <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          position: "sticky",
-          bottom: 0,
-          height: 40,
-          alignItems: "center",
-        }}
-      >
-        <Button
-          appearance="primary"
-          onClick={() => props.run("Single")}
-          disabled={props.loading || !canRun}
-        >
-          Fuzzy
-        </Button>
-
-        <Button
-          appearance="primary"
-          onClick={() => props.run("Dual")}
-          disabled={props.loading || !canRun}
-        >
-          Fuzzy VS Legacy
-        </Button>
-      </div> */}

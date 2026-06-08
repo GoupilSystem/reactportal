@@ -2,35 +2,43 @@ import { Text } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 
 import type { LookupResult } from "../types/LookupResultTypes";
+import type { DataInput, ScoreRule } from "../types/LookupRequestTypes";
 import { SingleResultPanel } from "./SingleResultPanel";
 
-type Props = {
+type ResultGridProps = {
   result: LookupResult;
+  dataInput: DataInput[];
+  scoreRules?: ScoreRule[];
+  reviewThreshold: number;
+  autoMatchThreshold: number;
 };
-
-export function ResultGrid({ result }: Props) {
+export function ResultGrid({
+  result,
+  dataInput,
+  scoreRules,
+  reviewThreshold,
+  autoMatchThreshold,
+}: ResultGridProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setSelectedIndex(null);
   }, [result]);
-  
-  const isDual = result.runMode === "Dual";
 
-  const gridColumns = isDual
+  const isVsLegacyLookup = result.runMode === "VsLegacyLookup";
+
+  const gridColumns = isVsLegacyLookup
     ? "110px 160px 160px 130px 210px 80px 170px 110px"
     : "120px 180px 180px 200px 130px 120px";
 
-  const getColor = (action?: string) =>
-    action === "AutoMatch"
-      ? "#2ECC71"
-      : action === "Review"
-      ? "#F1C40F"
-      : "#E74C3C";
+  const getColor = (score: number) => {
+    if (score >= autoMatchThreshold) return "#2ECC71"; // green
+    if (score >= reviewThreshold) return "#F1C40F";    // yellow
+    return "#E74C3C";                                   // red
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-
       {/* HEADER */}
       <div
         style={{
@@ -50,18 +58,21 @@ export function ResultGrid({ result }: Props) {
         <div>Street</div>
         <div>Postal</div>
 
-        {isDual && (
+        {isVsLegacyLookup && (
           <>
             <div>Legacy</div>
-            <div>Diff</div>
+            <div>VS Legacy</div>
           </>
         )}
       </div>
 
       {/* ROWS */}
       {result.results.map((r, index) => {
-        const dataInput = r.dataInput;
+        const input = dataInput[index];
         const isOpen = selectedIndex === index;
+
+        const topCandidate = r.candidates?.[0];
+        const topScore = topCandidate?.candidateScore?.score ?? 0;
 
         return (
           <div key={`${result.runMode}-${index}`}>
@@ -75,49 +86,40 @@ export function ResultGrid({ result }: Props) {
                 cursor: "pointer",
                 background: isOpen ? "#f5f9ff" : "#fff",
                 borderBottom: isOpen ? "none" : "1px solid #eee",
-                transition: "background 0.2s",
               }}
             >
               <Text weight="semibold">
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    border: `2px solid ${getColor(r.action)}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 600,
-                    fontSize: 14,
-                  }}
-                >
-                  {r.confidence}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      border: `2px solid ${getColor(topScore)}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 600,
+                      fontSize: 14,
+                    }}
+                  >
+                    {topScore}
+                  </div>
+
+                  <span>{isOpen ? "▲" : "▼"}</span>
                 </div>
+              </Text>
 
-              <span>{isOpen ? "▲" : "▼"}</span>
-            </div>
-            </Text>
-              <div>{dataInput?.fullName}</div>
-              <div>{dataInput?.email}</div>
-              <div>{dataInput?.mobilePhone}</div>
-              <div>{dataInput?.street}</div>
-              <div>{dataInput?.postalCode}</div>
+              <div>{input?.fullName}</div>
+              <div>{input?.email}</div>
+              <div>{input?.mobilePhone}</div>
+              <div>{input?.street}</div>
+              <div>{input?.postalCode}</div>
 
-              {isDual && (
+              {isVsLegacyLookup && (
                 <>
-                  <div>
-                    {r.legacyLookupSummary?.statusText ?? "-"}
-                  </div>
-
-                  <div>
-                    {r.vsLegacyDiff?.improved
-                      ? "Improved"
-                      : r.vsLegacyDiff?.regression
-                      ? "Regression"
-                      : "Same"}
-                  </div>
+                  <div>-</div>
+                  <div>-</div>
                 </>
               )}
             </div>
@@ -128,11 +130,10 @@ export function ResultGrid({ result }: Props) {
                 overflow: "hidden",
                 transition: "max-height 250ms ease",
                 background: "#fafafa",
-                borderBottom: isOpen ? "1px solid #eee" : "none",
               }}
             >
               <div style={{ padding: 12 }}>
-                <SingleResultPanel result={r} />
+                <SingleResultPanel result={r} scoreRules={scoreRules} />
               </div>
             </div>
           </div>

@@ -1,6 +1,4 @@
-import type { DataInput } from "./LookupRequestTypes";
-
-export type RunMode = "Single" | "Dual";
+export type RunMode = "NewLookup" | "VsLegacyLookup";
 
 export type LookupResult = {
   runMode: RunMode;
@@ -8,23 +6,18 @@ export type LookupResult = {
 };
 
 export type SingleResult = {
-  dataInput: DataInput;
-
-  action: string;
-  candidateCount: number;
-  confidence: number;
-
-  contactId?: string;
-
-  candidates: ContactCandidate[];
-  execution: LookupExecutionReport;
-
-  legacyLookupSummary?: LegacyLookupSummary;
-  vsLegacyDiff?: VsLegacyDiff;
+  candidates: Candidate[];
+  singleResultTimeReport: SingleResultTimeReport;
+  vsLegacySummary: VsLegacySummary;
 };
 
-export type ContactCandidate = {
-  contactId: string;
+export type VsLegacySummary = {
+  statusText: string;
+  matchCount: number;
+};
+
+export type Candidate = {
+  candidateId: string;
 
   ssn?: string;
   fullName?: string;
@@ -33,24 +26,15 @@ export type ContactCandidate = {
   street?: string;
   postalCode?: string;
 
-  scoring: CandidateScoring;
-  breakdown: ScoreBreakdown;
+  candidateScore: CandidateScore;
+
+  fieldScores: FieldScore[];
 };
 
-export type CandidateScoring = {
+export type CandidateScore = {
   score: number;
   fuzzyScore: number | null;
   fuzzySourceField: string | null;
-  action: string;
-};
-
-export type ScoreBreakdown = {
-  ssn?: FieldScore;
-  email?: FieldScore;
-  mobilePhone?: FieldScore;
-  fullName?: FieldScore;
-  street?: FieldScore;
-  postalCode?: FieldScore;
 };
 
 export type FieldScore = {
@@ -58,37 +42,24 @@ export type FieldScore = {
   absoluteSimilarity: number;
   normalizedSimilarity: number;
   weight: number;
-  contributionToGlobalScore: number;
+  contributionToCandidateScore: number;
   used: boolean;
 };
 
-export type LookupExecutionReport = {
+export type SingleResultTimeReport = {
   totalTimeMs: number;
   searchTimeMs: number;
   scoreTimeMs: number;
-  steps: StepExecutionReport[];
+  stepTimeReports: StepTimeReport[];
 };
 
-export type StepExecutionReport = {
+export type StepTimeReport = {
   order: number;
   fieldName: string;
   type: "Search" | "Score";
   operation: string;
   timeMs: number;
   candidatesFound?: number;
-};
-
-export type LegacyLookupSummary = {
-  statusText: string;
-  matchCount: number;
-  hasMatch: boolean;
-  invalidSearchCriteria: boolean;
-};
-
-export type VsLegacyDiff = {
-  improved: boolean;
-  regression: boolean;
-  same: boolean;
 };
 
 export type ResultTab = {

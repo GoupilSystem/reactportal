@@ -35,41 +35,28 @@ export function ThresholdBar({ review, autoMatch, onChange }: Props) {
   const red = "#E74C3C";
   const yellow = "#F1C40F";
   const green = "#2ECC71";
+  const border = "#3F3F3F";
+  const handleGrey = "#8A8A8A";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      
-      {/* LABEL ROW */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Text>
-          <Text weight="semibold">Total Score</Text> Review: {review} → Automerge: {autoMatch}
-        </Text>
-      </div>
+      <Text>
+        <Text weight="semibold">Total Score</Text> Review: {review} → Automerge: {autoMatch}
+      </Text>
 
       {/* TRACK */}
       <div
         ref={ref}
         style={{
           position: "relative",
-          height: 10,
-          borderRadius: 6,
+          height: 12,
+          borderRadius: 0, // squared edges
           background: "#eee",
+          border: `1px solid ${border}`,
+          overflow: "visible",
         }}
       >
-        {/* RED (0 → review) */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: `${review}%`,
-            height: "100%",
-            background: red,
-            borderTopLeftRadius: 6,
-            borderBottomLeftRadius: 6,
-          }}
-        />
-
-        {/* YELLOW (review → autoMatch) */}
+        <div style={{ position: "absolute", left: 0, width: `${review}%`, height: "100%", background: red }} />
         <div
           style={{
             position: "absolute",
@@ -79,8 +66,6 @@ export function ThresholdBar({ review, autoMatch, onChange }: Props) {
             background: yellow,
           }}
         />
-
-        {/* GREEN (autoMatch → 100) */}
         <div
           style={{
             position: "absolute",
@@ -88,8 +73,6 @@ export function ThresholdBar({ review, autoMatch, onChange }: Props) {
             width: `${100 - autoMatch}%`,
             height: "100%",
             background: green,
-            borderTopRightRadius: 6,
-            borderBottomRightRadius: 6,
           }}
         />
 
@@ -97,26 +80,25 @@ export function ThresholdBar({ review, autoMatch, onChange }: Props) {
         <div
           onPointerDown={(e) => {
             const move = handleMove("review");
-
             const onMove = (ev: PointerEvent) => move(ev);
             const stop = () => {
               window.removeEventListener("pointermove", onMove);
               window.removeEventListener("pointerup", stop);
             };
-
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", stop);
           }}
           style={{
             position: "absolute",
             left: `${review}%`,
-            top: -5,
-            width: 14,
-            height: 18,
-            background: red,
+            top: "50%",
+            width: 8,
+            height: 24,
+            background: handleGrey,
             borderRadius: 4,
+            border: `1px solid #5A5A5A`,
             cursor: "grab",
-            transform: "translateX(-50%)",
+            transform: "translate(-50%, -50%)",
             zIndex: 2,
           }}
         />
@@ -125,26 +107,25 @@ export function ThresholdBar({ review, autoMatch, onChange }: Props) {
         <div
           onPointerDown={(e) => {
             const move = handleMove("auto");
-
             const onMove = (ev: PointerEvent) => move(ev);
             const stop = () => {
               window.removeEventListener("pointermove", onMove);
               window.removeEventListener("pointerup", stop);
             };
-
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", stop);
           }}
           style={{
             position: "absolute",
             left: `${autoMatch}%`,
-            top: -5,
-            width: 14,
-            height: 18,
-            background: green,
+            top: "50%",
+            width: 8,
+            height: 24,
+            background: handleGrey,
             borderRadius: 4,
+            border: `1px solid #5A5A5A`,
             cursor: "grab",
-            transform: "translateX(-50%)",
+            transform: "translate(-50%, -50%)",
             zIndex: 3,
           }}
         />

@@ -1,13 +1,27 @@
+import { useEffect } from "react";
+import type { DataInput, ScoreRule } from "../types/LookupRequestTypes";
 import type { ResultTab } from "../types/LookupResultTypes";
 import { ResultGrid } from "./ResultGrid";
 
-type Props = {
+type ResultPanelProps = {
   tabs: ResultTab[];
   activeTab: string | null;
   setActiveTab: (id: string) => void;
+  dataInput: DataInput[];
+  scoreRules?: ScoreRule[];
+  reviewThreshold: number;
+  autoMatchThreshold: number;
 };
 
-export function ResultPanel({ tabs, activeTab, setActiveTab }: Props) {
+export function ResultPanel({ 
+  tabs, 
+  activeTab,
+  setActiveTab,
+  dataInput,
+  scoreRules,
+  reviewThreshold,
+  autoMatchThreshold
+}: ResultPanelProps) {
   const active = tabs.find(t => t.id === activeTab);
 
   return (
@@ -55,6 +69,10 @@ export function ResultPanel({ tabs, activeTab, setActiveTab }: Props) {
           <ResultGrid
             key={active.id}
             result={active.result}
+            dataInput={dataInput}
+            scoreRules={scoreRules}
+            reviewThreshold={reviewThreshold}
+            autoMatchThreshold={autoMatchThreshold}
           />
         )}
       </div>

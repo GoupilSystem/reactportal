@@ -2,20 +2,34 @@ import type { DataInput, LookupPlan } from "../types/LookupRequestTypes";
 
 export const defaultDataInput: DataInput[] = [
   {
-    "SSN": "25059241837",
+    "ssn": "25059241837",
     "fullName": "Iselin Renée Lægreid",
     "email": "iselin@laegreid.net",
     "mobilePhone": "+4792809389",
     "street": "Harald Hårfagres gate 12 C",
-    "postalCode": "0363"
+    "postalCode": "0363",
+    "city": "OSLO",
+    "country": "Norge"
   },
-{
-    "SSN": "25059241837",
-    "fullName": "Raoul Renée Lægreid",
-    "email": "islin@laegreid.net",
-    "mobilePhone": "+4792809389",
-    "street": "Harald Hårfagres gate 12 C",
-    "postalCode": "0363"
+  {
+      "ssn": "25059241837",
+      "fullName": "Raoul Renée Lægreid",
+      "email": "islin@laegreid.net",
+      "mobilePhone": "+4792809389",
+      "street": "Harald Hårfagres gate 12 C",
+      "postalCode": "0363",
+      "city": "OSLO",
+    "country": "Norge"
+    },
+  {
+    "organizationNumber": "992037601",
+    "email": "contact@company.no",
+    "telephone": "+4700000000",
+    "name": "AccentureAS",
+    "street": "Rådhusgata 27",
+    "postalCode": "0158",
+    "city": "OSLO",
+    "country": "Norge"
   }
 ];
 

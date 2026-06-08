@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FluentProvider,
   webLightTheme,
@@ -50,6 +50,7 @@ const useStyles = makeStyles({
 });
 
 export default function App() {
+
   const styles = useStyles();
 
   const [dataInput, setDataInput] = useState<DataInput[]>(defaultDataInput);
@@ -64,7 +65,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   const [requestHeight, setRequestHeight] = useState(300);
-  const [runMode, setRunMode] = useState<RunMode>("Single");
+  const [runMode, setRunMode] = useState<RunMode>("NewLookup");
 
   const startDrag = (e: React.MouseEvent) => {
   const startY = e.clientY;
@@ -103,6 +104,8 @@ export default function App() {
 
       const response = await runLookup(payload);
 
+      console.log("Lookup response:\n", JSON.stringify(response, null, 2));
+      
       setTabs(prev => {
         const id = crypto.randomUUID();
 
@@ -110,7 +113,7 @@ export default function App() {
           id,
           timestamp: new Date().toISOString(),
           title: `Lookup ${prev.length + 1}`,
-          result: response,
+          result: response
         };
 
         setActiveTab(id);
@@ -122,6 +125,9 @@ export default function App() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+      console.log("LookupPlan received in App:", lookupPlan);}, [lookupPlan]);
 
   return (
     <FluentProvider theme={webLightTheme}>
@@ -178,6 +184,10 @@ export default function App() {
               tabs={tabs}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              dataInput={dataInput}
+              scoreRules={lookupPlan.scoreRules}
+              reviewThreshold={lookupPlan.reviewThreshold}
+              autoMatchThreshold={lookupPlan.autoMatchThreshold}
             />
           </div>
         </div>

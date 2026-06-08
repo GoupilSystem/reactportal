@@ -39,7 +39,7 @@ export function DataInputPanel(props: Props) {
               // ignore invalid JSON while typing
             }
           }}
-          style={{ flex: 1, height: "100%", minHeight: 0 }}
+          style={{ flex: 1, height: "100%", minHeight: 1000 }}
         />
       </div>
     </div>

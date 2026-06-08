@@ -11,96 +11,149 @@ import { useEffect, useState } from "react";
 
 import type { SingleResult } from "../types/LookupResultTypes";
 import { ExecutionTimeline } from "./ExecutionTimeline";
+import type { ScoreRule } from "../types/LookupRequestTypes";
 
-type Props = {
+type SingleResultProps = {
   result: SingleResult;
+  scoreRules?: ScoreRule[];
 };
 
-export function SingleResultPanel({ result }: Props) {
+export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     setShowAll(false);
   }, [result]); // resets only when result object changes (new run/tab content)
-
+  
   const items = result.candidates ?? [];
-  const execution = result.execution;
+  const execution = result.singleResultTimeReport;
 
   const visibleItems = showAll ? items : items.slice(0, 5);
 
   const getContactUrl = (id: string) =>
     `https://kf.crm4.dynamics.com/main.aspx?etn=contact&id=${id}&pagetype=entityrecord`;
 
-  // 🔥 FULL RESTORED FIELD RENDERING (old UX)
-  const renderField = (value?: string, breakdown?: any) => {
+  const getScoreRule = (fieldName: string) => {
+    return scoreRules?.find(r => r.fieldName === fieldName);
+  };  
+
+  const getFieldScore = (item: any, fieldName: string) =>
+    item.fieldScores?.find(
+      (x: any) => x.fieldName.toLowerCase() === fieldName.toLowerCase()
+    );
+  
+  const renderField = (
+    value?: string,
+    fieldScore?: any,
+    fieldName?: string
+  ) => {
     if (!value) return null;
 
-    let bg: string | undefined;
-
-    const percent = Math.round((breakdown?.normalizedSimilarity ?? 0) * 100);
-    const abs = Math.round(breakdown?.absoluteSimilarity ?? 0);
+    const percent = Math.round((fieldScore?.normalizedSimilarity ?? 0) * 100);
 
     let color = "#e74c3c";
-    if (breakdown?.normalizedSimilarity >= 1) color = "#2ecc71";
-    else if (breakdown?.normalizedSimilarity >= 0.5) color = "#f1c40f";
+    if (fieldScore?.normalizedSimilarity >= 1) color = "#2ecc71";
+    else if (fieldScore?.normalizedSimilarity >= 0.5) color = "#f1c40f";
+
+    const pts = fieldScore?.contributionToCandidateScore ?? 0;
+
+    const rule = fieldName ? getScoreRule(fieldName) : undefined;
+
+    const min = rule?.thresholdRange?.[0];
+    const max = rule?.thresholdRange?.[1];
 
     return (
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
           width: "100%",
-          height: "100%",
-          padding: "6px 8px",
+          padding: "8px 8px",
           boxSizing: "border-box",
-          borderRadius: 4,
-          background: bg,
         }}
       >
         {/* VALUE */}
-        <div style={{ fontSize: 13, fontWeight: 500 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>
           {value}
-        </div>
-
-        {/* BAR */}
-        <div
-          style={{
-            height: 6,
-            width: "100%",
-            background: "#eee",
-            borderRadius: 4,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              height: "100%",
-              width: `${percent}%`,
-              background: color,
-              transition: "width 0.2s ease",
-            }}
-          />
         </div>
 
         {/* METRICS */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            fontSize: 10,
-            opacity: 0.85,
+            display: "grid",
+            gridTemplateColumns: "20px 10px 1fr",
+            columnGap: 1,
+            alignItems: "center",
           }}
         >
-          <span>
-            <span style={{ fontSize: 13, fontWeight: 500 }}>
-              {breakdown?.contributionToGlobalScore ?? 0}pts
+          {/* LEFT: SCORE */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 1, height: "6px" }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>
+              {pts}
             </span>
-            {" "}· Norm {percent}%
-          </span>
+            <span style={{ fontSize: 9, color: "#777" }}>pts</span>
+          </div>
 
-          <span>Abs {abs}%</span>
+          <div />
+
+          {/* RIGHT: BAR + SIMS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+
+            {/* ROW 1: min | bar | max */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 1, height: "12px" }}>
+
+              <div style={{ fontSize: 10, color: "#777", textAlign: "right" }}>
+                {min}
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                  height: 6,
+                  background: "#eee",
+                  borderRadius: 4,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${percent}%`,
+                    background: color,
+                    transition: "width 0.2s ease",
+                  }}
+                />
+              </div>
+
+              <div style={{ fontSize: 10, color: "#777" }}>
+                {max}
+              </div>
+
+            </div>
+
+            {/* ROW 2: empty | similarity | empty */}
+            <div style={{ display: "flex", alignItems: "flex-start", height: "6px" }}>
+
+              <div style={{ width: 30 }} />
+
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems:"flex-start",
+                  fontSize: 12,
+                  color: "#777",
+                }}
+              >
+                {percent}%
+              </div>
+
+              <div style={{ width: 30 }} />
+
+            </div>
+
+          </div>
         </div>
       </div>
     );
@@ -109,32 +162,36 @@ export function SingleResultPanel({ result }: Props) {
   const columns = [
     createTableColumn<any>({
         columnId: "score",
-        renderHeaderCell: () => "Score",
+        renderHeaderCell: () => "Total Score",
         renderCell: item => {
-          const action = item.scoring?.action;
-
-          const color =
-            action === "AutoMatch"
-              ? "#2ECC71"
-              : action === "Review"
-              ? "#F1C40F"
-              : "#E74C3C";
-
+          
+          
         return (
-          <div
-            style={{
-              width: 28,
-              height: 26,
-              borderRadius: "50%",
-              border: `2px solid ${color}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 600,
-              fontSize: 14,
-            }}
-          >
-            {item.scoring?.score ?? 0}
+          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <div
+              style={{
+                width: 28,
+                height: 26,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {item.candidateScore?.score ?? 0}
+            </div>
+
+            <div
+              style={{
+                fontSize: 11,
+                color: "#777",
+                lineHeight: 1,
+              }}
+            >
+              pts
+            </div>
           </div>
         );
       },
@@ -144,58 +201,60 @@ export function SingleResultPanel({ result }: Props) {
       columnId: "fuzzyScore",
       renderHeaderCell: () => "Fuzzy",
       renderCell: item =>
-        item.scoring.fuzzyScore != null
-          ? `${item.scoring.fuzzyScore.toFixed(2)} (${item.scoring.fuzzySourceField ?? "?"})`
+        item.candidateScore.fuzzyScore != null
+          ? `${item.candidateScore.fuzzyScore.toFixed(2)} (${item.candidateScore.fuzzySourceField ?? "?"})`
           : "-",
     }),
 
     createTableColumn<any>({
       columnId: "ssn",
       renderHeaderCell: () => "SSN",
-      renderCell: item => renderField(item.ssn, item.breakdown?.ssn),
+      renderCell: item => 
+        renderField(item.ssn, getFieldScore(item, "SSN"), "SSN"),
     }),
 
     createTableColumn<any>({
       columnId: "email",
       renderHeaderCell: () => "Email",
-      renderCell: item => renderField(item.email, item.breakdown?.email),
+      renderCell: item => 
+        renderField(item.email, getFieldScore(item, "email"), "email"),
     }),
 
     createTableColumn<any>({
       columnId: "phone",
       renderHeaderCell: () => "Mobile",
       renderCell: item =>
-        renderField(item.mobilePhone, item.breakdown?.mobilePhone),
+        renderField(item.mobilePhone, getFieldScore(item, "mobilePhone"), "mobilePhone"),
     }),
 
     createTableColumn<any>({
       columnId: "fullName",
       renderHeaderCell: () => "Full Name",
       renderCell: item =>
-        renderField(item.fullName, item.breakdown?.fullName),
+        renderField(item.fullName, getFieldScore(item, "fullName"), "fullName"),
     }),
 
     createTableColumn<any>({
       columnId: "street",
       renderHeaderCell: () => "Street",
       renderCell: item =>
-        renderField(item.street, item.breakdown?.street),
+        renderField(item.street, getFieldScore(item, "street"), "street"),
     }),
 
     createTableColumn<any>({
       columnId: "postalCode",
       renderHeaderCell: () => "Postal Code",
       renderCell: item =>
-        renderField(item.postalCode, item.breakdown?.postalCode),
+        renderField(item.postalCode, item.breakdown?.postalCode, "postalCode"),
     }),
 
     createTableColumn<any>({
-      columnId: "contactId",
+      columnId: "candidateId",
       renderHeaderCell: () => "Contact",
       renderCell: item =>
-        item.contactId ? (
+        item.candidateId ? (
           <a
-            href={getContactUrl(item.contactId)}
+            href={getContactUrl(item.candidateId)}
             target="_blank"
             rel="noreferrer"
             style={{ color: "#0078d4" }}
@@ -211,7 +270,7 @@ export function SingleResultPanel({ result }: Props) {
 
       {/* EXECUTION TIMELINE */}
       {execution && (
-        <ExecutionTimeline steps={execution.steps ?? []} />
+        <ExecutionTimeline steps={execution.stepTimeReports ?? []} />
       )}
 
       {/* TOOLBAR */}
@@ -245,6 +304,8 @@ export function SingleResultPanel({ result }: Props) {
                       ? { width: 80, minWidth: 80, maxWidth: 80 }
                       : columnId === "ssn"
                       ? { width: 60, minWidth: 60, maxWidth: 60 }
+                      : columnId === "candidateId"
+                      ? { width: 80, minWidth: 80, maxWidth: 80 }
                       : { paddingLeft: 20 }
                   }
                 >
@@ -266,6 +327,8 @@ export function SingleResultPanel({ result }: Props) {
                       ? { width: 80, minWidth: 80, maxWidth: 80 }
                       : columnId === "ssn"
                       ? { width: 60, minWidth: 60, maxWidth: 60 }
+                      : columnId === "candidateId"
+                      ? { width: 80, minWidth: 80, maxWidth: 80 }
                       : {}
                   }
                   >

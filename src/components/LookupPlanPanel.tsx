@@ -1,18 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Text, Textarea, Switch, Button } from "@fluentui/react-components";
 
 import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupRequestTypes";
 import type { DataInput } from "../types/LookupRequestTypes";
 import { SearchStepRow } from "./SearchStepRow";
 import { ThresholdBar } from "./ThresholdBar";
+import { buildFieldOptions } from "../utils/Helper";
 
 type Props = {
   lookupPlan: LookupPlan;
   setLookupPlan: React.Dispatch<React.SetStateAction<LookupPlan>>;
-  dataInput: DataInput;
+  dataInput: DataInput[];
 
-  onRunSingle: () => void;
-  onRunDual: () => void;
+  onRunNewLookup: () => void;
+  onRunVsLegacyLookup: () => void;
 
   loading: boolean;
 
@@ -27,8 +28,8 @@ export function LookupPlanPanel({
   lookupPlan,
   setLookupPlan,
   dataInput,
-  onRunSingle,
-  onRunDual,
+  onRunNewLookup: onRunNewLookup,
+  onRunVsLegacyLookup,
   loading,
   reviewThreshold,
   setReviewThreshold,
@@ -49,14 +50,11 @@ export function LookupPlanPanel({
 
   const canRun = hasValidPlan && hasContacts;
 
-  const contactFields = useMemo(() => {
-    return Object.keys(dataInput).map(key => ({
-      key: key as keyof DataInput,
-      label: key,
-    }));
-  }, [dataInput]);
+  const fields = useMemo(
+    () => buildFieldOptions(dataInput),
+    [dataInput]
+  );
 
-  // Shared score state per fieldName
   const scoreRuleMap = useMemo(() => {
     const map = new Map<string, ScoreRule>();
     for (const r of lookupPlan.scoreRules ?? []) {
@@ -213,7 +211,7 @@ export function LookupPlanPanel({
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between", // 👈 KEY FIX
+            justifyContent: "space-between",
             gap: 200,
           }}
         >
@@ -233,17 +231,17 @@ export function LookupPlanPanel({
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             <Button
               appearance="primary"
-              onClick={onRunSingle}
+              onClick={onRunNewLookup}
               disabled={loading || !canRun}
             >
               Fuzzy
             </Button>
 
             <Button
-              onClick={onRunDual}
+              onClick={onRunVsLegacyLookup}
               disabled={loading || !canRun}
             >
-              Fuzzy vs Legacy
+              Fuzzy VS Legacy
             </Button>
           </div>
         </div>
@@ -302,7 +300,7 @@ export function LookupPlanPanel({
               scoreRule={step ? scoreRuleMap.get(step.fieldName) : undefined}
               updateScoreRule={updateScoreRule}
               col={col}
-              contactFields={contactFields}
+              fields={fields}
               updateStep={updateStep}
               addStep={addStep}
               moveUp={moveUp}

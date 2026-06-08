@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupRequestTypes";
 import type { DataInput, QueryOperator } from "../types/LookupRequestTypes";
 import { Select, Input, Button, Text } from "@fluentui/react-components";
@@ -9,7 +10,7 @@ type Props = {
   scoreRule?: ScoreRule;
 
   col: any;
-  contactFields: { key: keyof DataInput; label: string }[];
+  fields: { key: keyof DataInput; label: string; group: string }[];
 
   updateStep: (s: SearchStep) => void;
   updateScoreRule: (
@@ -32,7 +33,7 @@ export function SearchStepRow({
   isAddRow,
   scoreRule,
   col,
-  contactFields,
+  fields: contactFields,
   updateScoreRule,
   updateStep,
   addStep,
@@ -64,6 +65,10 @@ export function SearchStepRow({
         </Row>
       );
   }
+
+  useEffect(() => {
+  console.log("Fields in Row:", contactFields);
+}, [contactFields]);
   
   return (
     <div>
@@ -97,7 +102,7 @@ export function SearchStepRow({
         <div style={cellStyle(col.gap)} />
 
         <div style={cellStyle(col.weight)}>
-          <Text size={200}>Weight</Text>
+          <Text size={200}>Max Pts</Text>
         </div>
 
         <div style={cellStyle(col.min)}>
@@ -128,20 +133,42 @@ export function SearchStepRow({
         >
           <Select
             value={selectValue}
-            onChange={(_, d) =>
+            onChange={(e) =>
               updateStep({
                 ...step,
-                fieldName: d.value as keyof DataInput,
+                fieldName: e.target.value as keyof DataInput,
               })
             }
           >
-            <option value="">-- missing field --</option>
+            <optgroup label="Contact">
+              {contactFields
+                .filter(f => f.group === "Contact")
+                .map(f => (
+                  <option key={f.key} value={f.key}>
+                    {f.label}
+                  </option>
+                ))}
+            </optgroup>
 
-            {contactFields.map(f => (
-              <option key={f.key} value={f.key}>
-                {f.label}
-              </option>
-            ))}
+            <optgroup label="Account">
+              {contactFields
+                .filter(f => f.group === "Account")
+                .map(f => (
+                  <option key={f.key} value={f.key}>
+                    {f.label}
+                  </option>
+                ))}
+            </optgroup>
+
+            <optgroup label="Shared">
+              {contactFields
+                .filter(f => f.group === "Shared")
+                .map(f => (
+                  <option key={f.key} value={f.key}>
+                    {f.label}
+                  </option>
+                ))}
+            </optgroup>
           </Select>
         </div>
 
