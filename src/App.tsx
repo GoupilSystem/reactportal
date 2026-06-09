@@ -95,7 +95,6 @@ export default function App() {
           ...lookupPlan,
           reviewThreshold,
           autoMatchThreshold,
-          searchSteps: lookupPlan.searchSteps.map(({ id, ...s }) => s),
         },
         runMode: mode,
       };
@@ -185,7 +184,7 @@ export default function App() {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               dataInput={dataInput}
-              scoreRules={lookupPlan.scoreRules}
+              lookupSteps={lookupPlan.lookupSteps}
               reviewThreshold={lookupPlan.reviewThreshold}
               autoMatchThreshold={lookupPlan.autoMatchThreshold}
             />

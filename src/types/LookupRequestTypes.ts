@@ -21,23 +21,27 @@ export type DataInput = {
   postalCode?: string;
   city?: string;
   country?: string;
+  bankAccountNumber?: string;
 };
 
 export type LookupPlan = {
   reviewThreshold: number;
   autoMatchThreshold: number;
-  searchSteps: SearchStep[];
-  scoreRules?: ScoreRule[];
+  lookupSteps: LookupStep[];
 };
 
-export type SearchStep = {
+export type LookupStep = {
   id: string;
   order: number;
   fieldName: keyof DataInput;
   type: "Query" | "Lucene";
+
   queryRule: QuerySearchRule;
   luceneRule: LuceneSearchRule;
+
   stopOnMatch: boolean;
+
+  scoreRule: ScoreRule;
 };
 
 export const queryOperators = [
@@ -61,7 +65,6 @@ export type LuceneSearchRule = {
 };
 
 export type ScoreRule = {
-  fieldName: keyof DataInput;
   weight: number;
   thresholdRange: [number, number];
 };

@@ -2,20 +2,13 @@ import { Text } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 
 import type { LookupResult } from "../types/LookupResultTypes";
-import type { DataInput, ScoreRule } from "../types/LookupRequestTypes";
+import type { DataInput, LookupStep } from "../types/LookupRequestTypes";
 import { SingleResultPanel } from "./SingleResultPanel";
 
-type ResultGridProps = {
-  result: LookupResult;
-  dataInput: DataInput[];
-  scoreRules?: ScoreRule[];
-  reviewThreshold: number;
-  autoMatchThreshold: number;
-};
 export function ResultGrid({
   result,
   dataInput,
-  scoreRules,
+  lookupSteps,
   reviewThreshold,
   autoMatchThreshold,
 }: ResultGridProps) {
@@ -32,9 +25,9 @@ export function ResultGrid({
     : "120px 180px 180px 200px 130px 120px";
 
   const getColor = (score: number) => {
-    if (score >= autoMatchThreshold) return "#2ECC71"; // green
-    if (score >= reviewThreshold) return "#F1C40F";    // yellow
-    return "#E74C3C";                                   // red
+    if (score >= autoMatchThreshold) return "#2ECC71";
+    if (score >= reviewThreshold) return "#F1C40F";
+    return "#E74C3C";
   };
 
   return (
@@ -52,9 +45,9 @@ export function ResultGrid({
         }}
       >
         <div>Top Score</div>
-        <div>Full Name</div>
+        <div>Name</div>
         <div>Email</div>
-        <div>Mobile</div>
+        <div>Phone</div>
         <div>Street</div>
         <div>Postal</div>
 
@@ -68,11 +61,21 @@ export function ResultGrid({
 
       {/* ROWS */}
       {result.results.map((r, index) => {
-        const input = dataInput[index];
+        const input = dataInput?.[index]; // safe fallback
         const isOpen = selectedIndex === index;
 
         const topCandidate = r.candidates?.[0];
         const topScore = topCandidate?.candidateScore?.score ?? 0;
+
+        const name =
+          input?.organizationNumber
+            ? input?.name ?? "-"
+            : input?.fullName ?? "-";
+
+        const phone =
+          input?.organizationNumber
+            ? input?.telephone ?? "-"
+            : input?.mobilePhone ?? "-";
 
         return (
           <div key={`${result.runMode}-${index}`}>
@@ -105,16 +108,15 @@ export function ResultGrid({
                   >
                     {topScore}
                   </div>
-
                   <span>{isOpen ? "▲" : "▼"}</span>
                 </div>
               </Text>
 
-              <div>{input?.fullName}</div>
-              <div>{input?.email}</div>
-              <div>{input?.mobilePhone}</div>
-              <div>{input?.street}</div>
-              <div>{input?.postalCode}</div>
+              <div>{name}</div>
+              <div>{input?.email ?? "-"}</div>
+              <div>{phone}</div>
+              <div>{input?.street ?? "-"}</div>
+              <div>{input?.postalCode ?? "-"}</div>
 
               {isVsLegacyLookup && (
                 <>
@@ -133,7 +135,7 @@ export function ResultGrid({
               }}
             >
               <div style={{ padding: 12 }}>
-                <SingleResultPanel result={r} scoreRules={scoreRules} />
+                <SingleResultPanel result={r} lookupSteps={lookupSteps} />
               </div>
             </div>
           </div>

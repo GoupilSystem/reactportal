@@ -10,33 +10,36 @@ import {
 import { useEffect, useState } from "react";
 
 import type { SingleResult } from "../types/LookupResultTypes";
+import type { LookupStep } from "../types/LookupRequestTypes";
 import { ExecutionTimeline } from "./ExecutionTimeline";
-import type { ScoreRule } from "../types/LookupRequestTypes";
 
 type SingleResultProps = {
   result: SingleResult;
-  scoreRules?: ScoreRule[];
+  lookupSteps?: LookupStep[];
 };
 
-export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
+export function SingleResultPanel({
+  result,
+  lookupSteps
+}: SingleResultProps) {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    setShowAll(false);
-  }, [result]); // resets only when result object changes (new run/tab content)
-  
+    console.log("Single Result values:", result);
+  }, [result]);
+
   const items = result.candidates ?? [];
   const execution = result.singleResultTimeReport;
-
   const visibleItems = showAll ? items : items.slice(0, 5);
 
   const getContactUrl = (id: string) =>
     `https://kf.crm4.dynamics.com/main.aspx?etn=contact&id=${id}&pagetype=entityrecord`;
 
-  const getScoreRule = (fieldName: string) => {
-    return scoreRules?.find(r => r.fieldName === fieldName);
-  };  
-
+  const getStep = (fieldName: string) =>
+    lookupSteps?.find(s =>
+      s.fieldName.toLowerCase() === fieldName.toLowerCase()
+    );
+  
   const getFieldScore = (item: any, fieldName: string) =>
     item.fieldScores?.find(
       (x: any) => x.fieldName.toLowerCase() === fieldName.toLowerCase()
@@ -57,7 +60,8 @@ export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
 
     const pts = fieldScore?.contributionToCandidateScore ?? 0;
 
-    const rule = fieldName ? getScoreRule(fieldName) : undefined;
+    const step = fieldName ? getStep(fieldName) : undefined;
+    const rule = step?.scoreRule;
 
     const min = rule?.thresholdRange?.[0];
     const max = rule?.thresholdRange?.[1];
@@ -165,9 +169,8 @@ export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
         renderHeaderCell: () => "Total Score",
         renderCell: item => {
           
-          
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             <div
               style={{
                 width: 28,
@@ -208,9 +211,13 @@ export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
 
     createTableColumn<any>({
       columnId: "ssn",
-      renderHeaderCell: () => "SSN",
-      renderCell: item => 
-        renderField(item.ssn, getFieldScore(item, "SSN"), "SSN"),
+      renderHeaderCell: () => "SSN/Org",
+      renderCell: item =>
+        renderField(
+          item.isAccount ? item.organizationNumber : item.ssn,
+          getFieldScore(item, item.isAccount ? "OrganizationNumber" : "SSN"),
+          item.isAccount ? "OrganizationNumber" : "SSN"
+        ),
     }),
 
     createTableColumn<any>({
@@ -222,16 +229,22 @@ export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
 
     createTableColumn<any>({
       columnId: "phone",
-      renderHeaderCell: () => "Mobile",
+      renderHeaderCell: () => "Phone",
       renderCell: item =>
-        renderField(item.mobilePhone, getFieldScore(item, "mobilePhone"), "mobilePhone"),
+        renderField(
+          item.isAccount ? item.telephone : item.mobilePhone,
+          getFieldScore(item, item.isAccount ? "Telephone" : "MobilePhone"),
+          item.isAccount ? "Telephone" : "MobilePhone"
+        ),
     }),
 
     createTableColumn<any>({
-      columnId: "fullName",
-      renderHeaderCell: () => "Full Name",
+      columnId: "name",
+      renderHeaderCell: () => "Name",
       renderCell: item =>
-        renderField(item.fullName, getFieldScore(item, "fullName"), "fullName"),
+        renderField(item.isAccount ? item.name : item.fullName, 
+          getFieldScore(item, item.isAccount ? "name" : "fullName"), 
+          item.isAccount ? "name" : "fullname")
     }),
 
     createTableColumn<any>({
@@ -245,7 +258,7 @@ export function SingleResultPanel({ result, scoreRules }: SingleResultProps) {
       columnId: "postalCode",
       renderHeaderCell: () => "Postal Code",
       renderCell: item =>
-        renderField(item.postalCode, item.breakdown?.postalCode, "postalCode"),
+        renderField(item.postalCode, getFieldScore(item, "postalCode"), "postalCode"),
     }),
 
     createTableColumn<any>({

@@ -6,7 +6,6 @@ import type {
   LookupPlan,
   RunMode,
 } from "../types/LookupRequestTypes";
-import { useEffect } from "react";
 
 
 type Props = {

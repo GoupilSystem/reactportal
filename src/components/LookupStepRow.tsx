@@ -1,23 +1,17 @@
 import { useEffect } from "react";
-import { type SearchStep, type ScoreRule, queryOperators } from "../types/LookupRequestTypes";
+import { type LookupStep, type ScoreRule, queryOperators } from "../types/LookupRequestTypes";
 import type { DataInput, QueryOperator } from "../types/LookupRequestTypes";
 import { Select, Input, Button, Text } from "@fluentui/react-components";
 
 type Props = {
-  step: SearchStep | null;
+  step: LookupStep | null;
   stepsLength: number;
   isAddRow: boolean;
-  scoreRule?: ScoreRule;
 
   col: any;
   fields: { key: keyof DataInput; label: string; group: string }[];
 
-  updateStep: (s: SearchStep) => void;
-  updateScoreRule: (
-    fieldName: keyof DataInput,
-    patch: Partial<ScoreRule>
-  ) => void;
-
+  updateStep: (s: LookupStep) => void;
   addStep: (order: number) => void;
   moveUp: (id: string) => void;
   moveDown: (id: string) => void;
@@ -27,14 +21,12 @@ type Props = {
   Row: React.FC<{ children: React.ReactNode }>;
 };
 
-export function SearchStepRow({
+export function LookupStepRow({
   step,
   stepsLength,
   isAddRow,
-  scoreRule,
   col,
-  fields: contactFields,
-  updateScoreRule,
+  fields,
   updateStep,
   addStep,
   moveUp,
@@ -43,32 +35,45 @@ export function SearchStepRow({
   cellStyle,
   Row,
 }: Props) {
-  const threshold = scoreRule?.thresholdRange ?? [0, 100];
+  const score = step?.scoreRule ?? { weight: 0, thresholdRange: [0, 100] as [number, number] };
 
-  const isValid = contactFields.some(f => f.key === step?.fieldName);
-
-  const selectValue =
-    step?.fieldName && isValid ? step?.fieldName : "";
+  const isValid = fields.some(f => f.key === step?.fieldName);
+  const selectValue = step?.fieldName && isValid ? step.fieldName : "";
 
   if (isAddRow || !step) {
     return (
+      <div style={{ height: 40, paddingTop: 20 }}>
         <Row>
-          <div style={{ ...cellStyle(col.gap), padding: 8, paddingLeft: 28 }}>
+          <div style={{ ...cellStyle(col.addStep), padding: 20, paddingLeft: 28 }}>
             <Button
-              size="medium"
-              style= {{borderRadius: 20, background: "#86e8af"}}
               appearance="subtle"
-              icon={<span style={{ marginBottom: 4, fontSize: 36, color: "#2ecc71" }}>＋</span>}
               onClick={() => addStep(stepsLength)}
+              style={{
+                width: 36,
+                height: 36,
+                minWidth: 36,
+                padding: 0,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#86e8af",
+              }}
+              icon={
+                <span style={{ paddingBottom: 6, fontSize: 36, lineHeight: 1 }}>
+                  +
+                </span>
+              }
             />
           </div>
         </Row>
-      );
+      </div>
+    );
   }
 
   useEffect(() => {
-  console.log("Fields in Row:", contactFields);
-}, [contactFields]);
+    console.log("Fields in Row:", fields);
+  }, [fields]);
   
   return (
     <div>
@@ -85,16 +90,16 @@ export function SearchStepRow({
               <Text size={200}>~</Text>
             </div>
             <div style={cellStyle(col.rule2)}>
-              <Text size={200}>Top</Text>
+              <Text size={100}>Top</Text>
             </div>
           </>
         ) : (
           <>
             <div style={cellStyle(col.rule1)}>
-              <Text size={200}>Operator</Text>
+              <Text size={100}>Operator</Text>
             </div>
             <div style={cellStyle(col.rule2)}>
-              <Text size={200}>Length</Text>
+              <Text size={100}>Length</Text>
             </div>
           </>
         )}
@@ -102,15 +107,15 @@ export function SearchStepRow({
         <div style={cellStyle(col.gap)} />
 
         <div style={cellStyle(col.weight)}>
-          <Text size={200}>Max Pts</Text>
+          <Text size={100}>Max Pts</Text>
         </div>
 
         <div style={cellStyle(col.min)}>
-          <Text size={200}>Min</Text>
+          <Text size={100}>Min</Text>
         </div>
 
         <div style={cellStyle(col.max)}>
-          <Text size={200}>Max</Text>
+          <Text size={100}>Max</Text>
         </div>
 
         <div style={cellStyle(col.gap)} />
@@ -139,9 +144,10 @@ export function SearchStepRow({
                 fieldName: e.target.value as keyof DataInput,
               })
             }
+            style={{ width: 150 }}
           >
             <optgroup label="Contact">
-              {contactFields
+              {fields
                 .filter(f => f.group === "Contact")
                 .map(f => (
                   <option key={f.key} value={f.key}>
@@ -151,7 +157,7 @@ export function SearchStepRow({
             </optgroup>
 
             <optgroup label="Account">
-              {contactFields
+              {fields
                 .filter(f => f.group === "Account")
                 .map(f => (
                   <option key={f.key} value={f.key}>
@@ -161,7 +167,7 @@ export function SearchStepRow({
             </optgroup>
 
             <optgroup label="Shared">
-              {contactFields
+              {fields
                 .filter(f => f.group === "Shared")
                 .map(f => (
                   <option key={f.key} value={f.key}>
@@ -267,10 +273,11 @@ export function SearchStepRow({
         <div style={cellStyle(col.weight)}>
           <Input
             type="number"
-            value={String(scoreRule?.weight ?? 0)}
+            value={String(score.weight)}
             onChange={(_, d) =>
-              updateScoreRule(step.fieldName, {
-                weight: Number(d.value),
+              updateStep({
+                ...step,
+                scoreRule: { ...score, weight: Number(d.value) },
               })
             }
             style={{ width: 60 }}
@@ -280,13 +287,14 @@ export function SearchStepRow({
         <div style={cellStyle(col.min)}>
           <Input
             type="number"
-            value={String(threshold[0])}
+            value={String(score.thresholdRange[0])}
             onChange={(_, d) =>
-              updateScoreRule(step.fieldName, {
-                thresholdRange: [
-                  Number(d.value),
-                  threshold[1],
-                ],
+              updateStep({
+                ...step,
+                scoreRule: {
+                  ...score,
+                  thresholdRange: [score.thresholdRange[1], Number(d.value)],
+                },
               })
             }
             style={{ width: 60 }}
@@ -296,13 +304,14 @@ export function SearchStepRow({
         <div style={cellStyle(col.max)}>
           <Input
             type="number"
-            value={String(threshold[1])}
+            value={String(score.thresholdRange[1])}
             onChange={(_, d) =>
-              updateScoreRule(step.fieldName, {
-                thresholdRange: [
-                  threshold[0],
-                  Number(d.value),
-                ],
+              updateStep({
+                ...step,
+                scoreRule: {
+                  ...score,
+                  thresholdRange: [score.thresholdRange[0], Number(d.value)],
+                },
               })
             }
             style={{ width: 60 }}

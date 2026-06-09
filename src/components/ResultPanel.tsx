@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import type { DataInput, ScoreRule } from "../types/LookupRequestTypes";
+import type { DataInput, LookupStep } from "../types/LookupRequestTypes";
 import type { ResultTab } from "../types/LookupResultTypes";
 import { ResultGrid } from "./ResultGrid";
 
@@ -8,17 +7,17 @@ type ResultPanelProps = {
   activeTab: string | null;
   setActiveTab: (id: string) => void;
   dataInput: DataInput[];
-  scoreRules?: ScoreRule[];
+  lookupSteps?: LookupStep[];
   reviewThreshold: number;
   autoMatchThreshold: number;
 };
 
-export function ResultPanel({ 
-  tabs, 
+export function ResultPanel({
+  tabs,
   activeTab,
   setActiveTab,
   dataInput,
-  scoreRules,
+  lookupSteps,
   reviewThreshold,
   autoMatchThreshold
 }: ResultPanelProps) {
@@ -65,12 +64,12 @@ export function ResultPanel({
 
       {/* ACTIVE CONTENT */}
       <div style={{ marginTop: 6 }}>
-        {active && (
+         {active && (
           <ResultGrid
             key={active.id}
             result={active.result}
             dataInput={dataInput}
-            scoreRules={scoreRules}
+            lookupSteps={lookupSteps}
             reviewThreshold={reviewThreshold}
             autoMatchThreshold={autoMatchThreshold}
           />

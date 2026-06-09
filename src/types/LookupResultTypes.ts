@@ -18,16 +18,25 @@ export type VsLegacySummary = {
 
 export type Candidate = {
   candidateId: string;
+  isAccount: boolean;
 
   ssn?: string;
+  organizationNumber?: string;
+
   fullName?: string;
+  name?: string;
+
   email?: string;
+
   mobilePhone?: string;
+  telephone?: string;
+
   street?: string;
   postalCode?: string;
+  city?: string;
+  country?: string;
 
   candidateScore: CandidateScore;
-
   fieldScores: FieldScore[];
 };
 

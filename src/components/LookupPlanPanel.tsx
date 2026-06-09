@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { Text, Textarea, Switch, Button } from "@fluentui/react-components";
 
-import type { LookupPlan, SearchStep, ScoreRule } from "../types/LookupRequestTypes";
+import type { LookupPlan, LookupStep } from "../types/LookupRequestTypes";
 import type { DataInput } from "../types/LookupRequestTypes";
-import { SearchStepRow } from "./SearchStepRow";
+import { LookupStepRow } from "./LookupStepRow";
 import { ThresholdBar } from "./ThresholdBar";
 import { buildFieldOptions } from "../utils/Helper";
 
@@ -28,7 +28,7 @@ export function LookupPlanPanel({
   lookupPlan,
   setLookupPlan,
   dataInput,
-  onRunNewLookup: onRunNewLookup,
+  onRunNewLookup,
   onRunVsLegacyLookup,
   loading,
   reviewThreshold,
@@ -36,11 +36,11 @@ export function LookupPlanPanel({
   autoMatchThreshold,
   setAutoMatchThreshold,
 }: Props) {
-  
   const steps = useMemo(
-    () => [...lookupPlan.searchSteps].sort((a, b) => a.order - b.order),
-    [lookupPlan.searchSteps]
+    () => [...lookupPlan.lookupSteps].sort((a, b) => a.order - b.order),
+    [lookupPlan.lookupSteps]
   );
+
 
   const hasValidPlan =
     steps.length > 0 &&
@@ -55,64 +55,41 @@ export function LookupPlanPanel({
     [dataInput]
   );
 
-  const scoreRuleMap = useMemo(() => {
-    const map = new Map<string, ScoreRule>();
-    for (const r of lookupPlan.scoreRules ?? []) {
-      map.set(r.fieldName, r);
-    }
-    return map;
-  }, [lookupPlan.scoreRules]);
-
-  function updateScoreRule(
-    fieldName: keyof DataInput,
-    patch: Partial<ScoreRule>
-  ) {
-    setLookupPlan(prev => {
-      const existing = prev.scoreRules ?? [];
-
-      const updated = existing.some(r => r.fieldName === fieldName)
-        ? existing.map(r =>
-            r.fieldName === fieldName ? { ...r, ...patch } : r
-          )
-        : [
-            ...existing,
-            {
-              fieldName,
-              weight: patch.weight ?? 0,
-              thresholdRange: patch.thresholdRange ?? [0, 100],
-            } as ScoreRule,
-          ];
-
-      return { ...prev, scoreRules: updated };
-    });
-  }
-
   function addStep(afterOrder: number) {
     setLookupPlan(prev => {
-      const newStep: SearchStep = {
+      const field: keyof DataInput = "email";
+
+      const newStep: LookupStep = {
         id: crypto.randomUUID(),
         order: afterOrder + 1,
-        fieldName: "email",
+        fieldName: field,
         type: "Query",
         queryRule: { operator: "Equal", length: 0 },
-        luceneRule: { deviation: 0, top: 15 },
+        luceneRule: { deviation: 1, top: 15 },
         stopOnMatch: false,
+        scoreRule: {
+          weight: 30,
+          thresholdRange: [70, 100],
+        },
       };
 
-      const steps = [
-        ...prev.searchSteps.map(s =>
+      const updatedSteps = [
+        ...prev.lookupSteps.map(s =>
           s.order > afterOrder ? { ...s, order: s.order + 1 } : s
         ),
         newStep,
       ].sort((a, b) => a.order - b.order);
 
-      return { ...prev, searchSteps: steps };
+      return {
+        ...prev,
+        lookupSteps: updatedSteps
+      };
     });
   }
 
   function moveUp(id: string) {
     setLookupPlan(prev => {
-      const steps = [...prev.searchSteps].sort((a, b) => a.order - b.order);
+      const steps = [...prev.lookupSteps].sort((a, b) => a.order - b.order);
 
       const index = steps.findIndex(s => s.id === id);
       if (index <= 0) return prev;
@@ -124,14 +101,14 @@ export function LookupPlanPanel({
 
       return {
         ...prev,
-        searchSteps: [...steps].sort((a, b) => a.order - b.order),
+        lookupSteps: [...steps].sort((a, b) => a.order - b.order),
       };
     });
   }
 
   function moveDown(id: string) {
     setLookupPlan(prev => {
-      const steps = [...prev.searchSteps].sort((a, b) => a.order - b.order);
+      const steps = [...prev.lookupSteps].sort((a, b) => a.order - b.order);
 
       const index = steps.findIndex(s => s.id === id);
       if (index >= steps.length - 1) return prev;
@@ -141,14 +118,14 @@ export function LookupPlanPanel({
         steps[index + 1].order,
       ];
 
-      return { ...prev, searchSteps: [...steps] };
+      return { ...prev, lookupSteps: [...steps] };
     });
   }
 
-  function updateStep(updated: SearchStep) {
+  function updateStep(updated: LookupStep) {
     setLookupPlan(prev => ({
       ...prev,
-      searchSteps: prev.searchSteps.map(s =>
+      lookupSteps: prev.lookupSteps.map(s =>
         s.id === updated.id ? updated : s
       ),
     }));
@@ -156,11 +133,14 @@ export function LookupPlanPanel({
 
   function deleteStep(id: string) {
     setLookupPlan(prev => {
-      const steps = prev.searchSteps
+      const remainingSteps = prev.lookupSteps
         .filter(s => s.id !== id)
         .map((s, i) => ({ ...s, order: i + 1 }));
 
-      return { ...prev, searchSteps: steps };
+      return {
+        ...prev,
+        lookupSteps: remainingSteps,
+      };
     });
   }
 
@@ -176,6 +156,7 @@ export function LookupPlanPanel({
     max: 60,
     stop: 20,
     action: 40,
+    addStep: 60 
   };
 
   const cellStyle = (width: number): React.CSSProperties => ({
@@ -252,15 +233,13 @@ export function LookupPlanPanel({
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 12 }}>
         <Text weight="semibold">Steps</Text>
       </div>
 
       <div
         style={{
           padding: 12,
-          paddingTop: 4, 
-          background: "#fff",
           overflowX: "auto",
         }}
       >
@@ -290,15 +269,13 @@ export function LookupPlanPanel({
           </Row>
 
           {/* ROWS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {[...steps, null].map((step, index) => (
-            <SearchStepRow
+            <LookupStepRow
               key={step?.id ?? "add-row"}
               step={step}
               stepsLength={steps.length}
               isAddRow={index === steps.length}
-              scoreRule={step ? scoreRuleMap.get(step.fieldName) : undefined}
-              updateScoreRule={updateScoreRule}
               col={col}
               fields={fields}
               updateStep={updateStep}
