@@ -26,6 +26,8 @@ export function ExecutionTimeline({ steps }: Props) {
   const totalScore = scoreSteps.reduce((a, b) => a + b.timeMs, 0);
   const total = totalSearch + totalScore;
 
+  const displayedStepsCount = searchSteps.length;
+
   const maxTime = Math.max(...sorted.map(s => s.timeMs), 1);
 
   const renderLane = (title: string, items: StepExecutionReport[], color: string) => (
@@ -49,7 +51,9 @@ export function ExecutionTimeline({ steps }: Props) {
               }}
             >
               <div style={{ fontSize: 12 }}>
-                #{step.order}: {step.operation} - {step.fieldName}
+                #{step.order}: {step.operation} - {step.fieldName}:{" "}
+                {step.candidatesFound} candidate
+                {step.candidatesFound !== 1 ? "s" : ""}
               </div>
 
               <div
@@ -81,45 +85,29 @@ export function ExecutionTimeline({ steps }: Props) {
   );
 
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 10,
-        background: "#fff",
-        padding: 10,
-      }}
-    >
-      {/* CLICKABLE SUMMARY ROW */}
+    <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 10 }}>
       <div
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(v => !v)}
         style={{
           display: "flex",
           alignItems: "center",
           gap: 6,
           cursor: "pointer",
-          userSelect: "none",
           padding: "6px 8px",
           borderRadius: 6,
           background: open ? "#f8fafc" : "transparent",
         }}
       >
-        <Text weight="semibold">
-          Total: {total}ms
-        </Text>
+        <Text weight="semibold">Total: {total}ms</Text>
 
         <Text style={{ fontSize: 12, opacity: 0.75 }}>
-          · Search: {totalSearch}ms
-          · Score: {totalScore}ms
-          · Steps: {steps.length}
+          · Search: {totalSearch}ms · Score: {totalScore}ms · Steps:{" "}
+          {displayedStepsCount}
         </Text>
 
-        {/* CARET */}
-        <div style={{ fontSize: 14 }}>
-          {open ? "▲" : "▼"}
-        </div>
+        <div>{open ? "▲" : "▼"}</div>
       </div>
 
-      {/* EXPAND */}
       <div
         style={{
           maxHeight: open ? 1000 : 0,

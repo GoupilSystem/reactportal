@@ -1,104 +1,114 @@
 import { useRef } from "react";
 
 type Props = {
+  weight: number;
   min: number;
   max: number;
-  onChange: (min: number, max: number) => void;
+  onChange: (weight: number, min: number, max: number) => void;
 };
 
-export function MiniThresholdBar({ min, max, onChange }: Props) {
+export function StepScoreBar({ weight, min, max, onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const active = useRef<"min" | "max" | null>(null);
 
   const clamp = (v: number) => Math.max(0, Math.min(100, v));
 
   const getValue = (e: PointerEvent) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return 0;
+    const el = ref.current;
+    if (!el) return 0;
 
-    const x = e.clientX - rect.left;
-    return clamp(Math.round((x / rect.width) * 100));
+    const rect = el.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+
+    return Math.round((x / rect.width) * 100);
   };
 
-  const onPointerMove = (e: PointerEvent) => {
-    if (!active.current) return;
+  const startDrag =
+    (type: "min" | "max") =>
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
 
-    const v = getValue(e);
+      const target = e.currentTarget;
+      target.setPointerCapture?.(e.pointerId);
 
-    if (active.current === "min") {
-      onChange(clamp(v), Math.max(v, max));
-    } else {
-      onChange(Math.min(v, min), clamp(v));
-    }
-  };
+      const move = (ev: PointerEvent) => {
+        const value = getValue(ev);
 
-  const stop = () => {
-    active.current = null;
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", stop);
-  };
+        if (type === "min") {
+          const newMin = Math.min(value, max - 1);
+          onChange(weight, newMin, max);
+        } else {
+          const newMax = Math.max(value, min + 1);
+          onChange(weight, min, newMax);
+        }
+      };
 
-  const start = (type: "min" | "max") => () => {
-    active.current = type;
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", stop);
-  };
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", stop);
+      };
+
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", stop);
+    };
 
   return (
-    <div
-      ref={ref}
-      style={{
-        position: "relative",
-        height: 10,
-        borderRadius: 0,
-        background:
-          "repeating-linear-gradient(90deg, #ccc 0px, #ccc 2px, transparent 2px, transparent 6px)",
-        border: "1px solid #444",
-        overflow: "visible",
-      }}
-    >
-      {/* RANGE */}
-      <div
-        style={{
-          position: "absolute",
-          left: `${min}%`,
-          width: `${Math.max(0, max - min)}%`,
-          height: "100%",
-          background: "rgba(52, 152, 219, 0.4)",
-        }}
-      />
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ fontSize: 11 }}>
+        {weight} pts ({min} → {max})
+      </div>
 
-      {/* MIN */}
       <div
-        onPointerDown={start("min")}
+        ref={ref}
         style={{
-          position: "absolute",
-          left: `${min}%`,
-          top: "50%",
-          width: 6,
-          height: 18,
-          background: "#888",
-          border: "1px solid #555",
-          transform: "translate(-50%, -50%)",
-          cursor: "grab",
+          position: "relative",
+          height: 10,
+          width: "100%",
+          minWidth: 120,
+          background: "#eee",
+          border: "1px solid #444",
         }}
-      />
+      >
+        {/* range */}
+        <div
+          style={{
+            position: "absolute",
+            left: `${min}%`,
+            width: `${Math.max(0, max - min)}%`,
+            height: "100%",
+            background: "#F1C40F",
+          }}
+        />
 
-      {/* MAX */}
-      <div
-        onPointerDown={start("max")}
-        style={{
-          position: "absolute",
-          left: `${max}%`,
-          top: "50%",
-          width: 6,
-          height: 18,
-          background: "#888",
-          border: "1px solid #555",
-          transform: "translate(-50%, -50%)",
-          cursor: "grab",
-        }}
-      />
+        {/* min handle */}
+        <div
+          onPointerDown={startDrag("min")}
+          style={{
+            position: "absolute",
+            left: `${min}%`,
+            width: 10,
+            height: 18,
+            background: "#777",
+            cursor: "ew-resize",
+            transform: "translate(-50%, -20%)",
+            zIndex: 2,
+          }}
+        />
+
+        {/* max handle */}
+        <div
+          onPointerDown={startDrag("max")}
+          style={{
+            position: "absolute",
+            left: `${max}%`,
+            width: 10,
+            height: 18,
+            background: "#777",
+            cursor: "ew-resize",
+            transform: "translate(-50%, -20%)",
+            zIndex: 3,
+          }}
+        />
+      </div>
     </div>
   );
 }

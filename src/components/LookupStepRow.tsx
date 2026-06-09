@@ -40,6 +40,8 @@ export function LookupStepRow({
   const isValid = fields.some(f => f.key === step?.fieldName);
   const selectValue = step?.fieldName && isValid ? step.fieldName : "";
 
+  const [min, max] = score.thresholdRange;
+
   if (isAddRow || !step) {
     return (
       <div style={{ height: 40, paddingTop: 20 }}>
@@ -287,13 +289,13 @@ export function LookupStepRow({
         <div style={cellStyle(col.min)}>
           <Input
             type="number"
-            value={String(score.thresholdRange[0])}
+            value={String(min)}
             onChange={(_, d) =>
               updateStep({
                 ...step,
                 scoreRule: {
                   ...score,
-                  thresholdRange: [score.thresholdRange[1], Number(d.value)],
+                  thresholdRange: [Number(d.value), max],
                 },
               })
             }
@@ -304,13 +306,13 @@ export function LookupStepRow({
         <div style={cellStyle(col.max)}>
           <Input
             type="number"
-            value={String(score.thresholdRange[1])}
+            value={String(max)}
             onChange={(_, d) =>
               updateStep({
                 ...step,
                 scoreRule: {
                   ...score,
-                  thresholdRange: [score.thresholdRange[0], Number(d.value)],
+                  thresholdRange: [min, Number(d.value)],
                 },
               })
             }

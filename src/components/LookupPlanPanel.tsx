@@ -233,13 +233,13 @@ export function LookupPlanPanel({
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 12, height: 4 }}>
         <Text weight="semibold">Steps</Text>
       </div>
 
       <div
         style={{
-          padding: 12,
+          padding: 10,
           overflowX: "auto",
         }}
       >

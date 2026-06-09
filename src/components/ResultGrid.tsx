@@ -5,6 +5,14 @@ import type { LookupResult } from "../types/LookupResultTypes";
 import type { DataInput, LookupStep } from "../types/LookupRequestTypes";
 import { SingleResultPanel } from "./SingleResultPanel";
 
+type ResultGridProps = {
+  result: LookupResult;
+  dataInput: DataInput[];
+  lookupSteps?: LookupStep[];
+  reviewThreshold: number;
+  autoMatchThreshold: number;
+};
+
 export function ResultGrid({
   result,
   dataInput,
@@ -53,8 +61,8 @@ export function ResultGrid({
 
         {isVsLegacyLookup && (
           <>
-            <div>Legacy</div>
-            <div>VS Legacy</div>
+            <div>Legacy Result</div>
+            <div>Diff</div>
           </>
         )}
       </div>
@@ -120,8 +128,8 @@ export function ResultGrid({
 
               {isVsLegacyLookup && (
                 <>
-                  <div>-</div>
-                  <div>-</div>
+                  <div>{r.vsLegacySummary?.statusText ?? "-"}</div>
+                  <div>{r.vsLegacySummary?.matchCount ?? 0}</div>
                 </>
               )}
             </div>

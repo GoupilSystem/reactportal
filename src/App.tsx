@@ -125,9 +125,6 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-      console.log("LookupPlan received in App:", lookupPlan);}, [lookupPlan]);
-
   return (
     <FluentProvider theme={webLightTheme}>
 

@@ -211,7 +211,7 @@ export function SingleResultPanel({
 
     createTableColumn<any>({
       columnId: "ssn",
-      renderHeaderCell: () => "SSN/Org",
+      renderHeaderCell: () => "Nr",
       renderCell: item =>
         renderField(
           item.isAccount ? item.organizationNumber : item.ssn,
@@ -263,7 +263,7 @@ export function SingleResultPanel({
 
     createTableColumn<any>({
       columnId: "candidateId",
-      renderHeaderCell: () => "Contact",
+      renderHeaderCell: () => "",
       renderCell: item =>
         item.candidateId ? (
           <a
@@ -272,7 +272,7 @@ export function SingleResultPanel({
             rel="noreferrer"
             style={{ color: "#0078d4" }}
           >
-            open
+            url
           </a>
         ) : null,
     }),
@@ -304,54 +304,68 @@ export function SingleResultPanel({
       </div>
 
       {/* GRID */}
-      <div style={{ maxHeight: 400, overflowY: "auto" }}>
-        <DataGrid items={visibleItems} columns={columns} sortable>
-          <DataGridHeader>
-            <DataGridRow>
-              {({ renderHeaderCell, columnId }) => (
-                <DataGridHeaderCell
-                  style={
-                    columnId === "score"
-                      ? { width: 60, minWidth: 60, maxWidth: 60 }
-                      : columnId === "fuzzyScore"
-                      ? { width: 80, minWidth: 80, maxWidth: 80 }
-                      : columnId === "ssn"
-                      ? { width: 60, minWidth: 60, maxWidth: 60 }
-                      : columnId === "candidateId"
-                      ? { width: 80, minWidth: 80, maxWidth: 80 }
-                      : { paddingLeft: 20 }
-                  }
-                >
-                  {renderHeaderCell()}
-                </DataGridHeaderCell>
-              )}
-            </DataGridRow>
-          </DataGridHeader>
-
-          <DataGridBody<any>>
-            {({ item, rowId }) => (
-              <DataGridRow key={rowId} style={{ alignItems: "stretch" }}>
-                {({ renderCell, columnId }) => (
-                  <DataGridCell
+      <div style={{ maxHeight: 400, overflowY: "auto", overflowX: "auto" }}>
+        <div style={{ minWidth: "max-content" }}>
+          <DataGrid items={visibleItems} columns={columns} sortable>
+            <DataGridHeader>
+              <DataGridRow>
+                {({ renderHeaderCell, columnId }) => (
+                  <DataGridHeaderCell
                     style={
-                    columnId === "score"
-                      ? { width: 60, minWidth: 60, maxWidth: 60 }
-                      : columnId === "fuzzyScore"
-                      ? { width: 80, minWidth: 80, maxWidth: 80 }
-                      : columnId === "ssn"
-                      ? { width: 60, minWidth: 60, maxWidth: 60 }
-                      : columnId === "candidateId"
-                      ? { width: 80, minWidth: 80, maxWidth: 80 }
-                      : {}
-                  }
+                      columnId === "score"
+                        ? { width: 60, minWidth: 60, maxWidth: 60 }
+                        : columnId === "fuzzyScore"
+                        ? { width: 80, minWidth: 80, maxWidth: 80 }
+                        : columnId === "ssn"
+                        ? { width: 140, minWidth: 140, maxWidth: 140, paddingLeft: 40 }
+                        : columnId === "email"
+                        ? { width: 180, minWidth: 180, maxWidth: 180 }
+                        : columnId === "phone"
+                        ? { width: 140, minWidth: 140, maxWidth: 140 }
+                        : columnId === "street"
+                        ? { width: 220, minWidth: 220, maxWidth: 220 }
+                        : columnId === "candidateId"
+                        ? { width: 20, minWidth: 20, maxWidth: 20 }
+                        : { paddingLeft: 20 }
+                    }
                   >
-                    {renderCell(item)}
-                  </DataGridCell>
+                    {renderHeaderCell()}
+                  </DataGridHeaderCell>
                 )}
               </DataGridRow>
-            )}
-          </DataGridBody>
-        </DataGrid>
+            </DataGridHeader>
+
+            <DataGridBody<any>>
+              {({ item, rowId }) => (
+                <DataGridRow key={rowId} style={{ alignItems: "stretch" }}>
+                  {({ renderCell, columnId }) => (
+                    <DataGridCell
+                      style={
+                      columnId === "score"
+                        ? { width: 60, minWidth: 60, maxWidth: 60 }
+                        : columnId === "fuzzyScore"
+                        ? { width: 80, minWidth: 80, maxWidth: 80 }
+                        : columnId === "ssn"
+                        ? { width: 140, minWidth: 140, maxWidth: 140 }
+                        : columnId === "email"
+                        ? { width: 180, minWidth: 180, maxWidth: 180 }
+                        : columnId === "phone"
+                        ? { width: 140, minWidth: 140, maxWidth: 140 }
+                        : columnId === "street"
+                        ? { width: 220, minWidth: 220, maxWidth: 220 }
+                        : columnId === "candidateId"
+                        ? { width: 20, minWidth: 20, maxWidth: 20 }
+                        : {}
+                    }
+                    >
+                      {renderCell(item)}
+                    </DataGridCell>
+                  )}
+                </DataGridRow>
+              )}
+            </DataGridBody>
+          </DataGrid>
+        </div>
       </div>
     </div>
   );
